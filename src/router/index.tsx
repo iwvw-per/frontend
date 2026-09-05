@@ -205,6 +205,27 @@ export const router = createBrowserRouter([
                 },
               },
               {
+                path: "abuse",
+                async lazy() {
+                  let { AbuseList } = await import("../component/Admin/AdminBundle.tsx");
+                  return { Component: AbuseList };
+                },
+              },
+              {
+                path: "event",
+                async lazy() {
+                  let { EventList } = await import("../component/Admin/AdminBundle.tsx");
+                  return { Component: EventList };
+                },
+              },
+              {
+                path: "payment",
+                async lazy() {
+                  let { PaymentList } = await import("../component/Admin/AdminBundle.tsx");
+                  return { Component: PaymentList };
+                },
+              },
+              {
                 path: "filesystem",
                 async lazy() {
                   let { FileSystem } = await import("../component/Admin/AdminBundle.tsx");

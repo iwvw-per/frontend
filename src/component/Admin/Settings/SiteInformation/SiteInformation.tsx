@@ -1,7 +1,10 @@
+import { LoadingButton } from "@mui/lab";
 import { Box, FormControl, FormControlLabel, Stack, Switch, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { getAnnouncement, updateAnnouncement } from "../../../../api/proAnnouncement.ts";
+import { useAppDispatch } from "../../../../redux/hooks.ts";
 import { isTrueVal } from "../../../../session/utils.ts";
 import { DenseFilledTextField } from "../../../Common/StyledComponents.tsx";
 import SettingForm from "../../../Pages/Setting/SettingForm.tsx";
@@ -14,6 +17,35 @@ import SiteURLInput from "./SiteURLInput.tsx";
 const SiteInformation = () => {
   const { t } = useTranslation("dashboard");
   const { formRef, setSettings, values } = useContext(SettingContext);
+  const dispatch = useAppDispatch();
+  const [announcementEnabled, setAnnouncementEnabled] = useState(false);
+  const [announcementContent, setAnnouncementContent] = useState("");
+  const [announcementSaving, setAnnouncementSaving] = useState(false);
+
+  useEffect(() => {
+    dispatch(getAnnouncement())
+      .then((res) => {
+        setAnnouncementEnabled(res.enabled);
+        setAnnouncementContent(res.content);
+      })
+      .catch(() => undefined);
+  }, [dispatch]);
+
+  const saveAnnouncement = () => {
+    setAnnouncementSaving(true);
+    dispatch(
+      updateAnnouncement({
+        enabled: announcementEnabled,
+        content: announcementContent,
+      }),
+    )
+      .then((res) => {
+        setAnnouncementEnabled(res.enabled);
+        setAnnouncementContent(res.content);
+      })
+      .catch(() => undefined)
+      .finally(() => setAnnouncementSaving(false));
+  };
 
   return (
     <Box component={"form"} ref={formRef} onSubmit={(e) => e.preventDefault()}>
@@ -64,10 +96,27 @@ const SiteInformation = () => {
                 <NoMarginHelperText>{t("settings.customFooterHTMLDes")}</NoMarginHelperText>
               </FormControl>
             </SettingForm>
-            <SettingForm title={t("settings.announcement")} lgWidth={5} pro>
+            <SettingForm title={t("settings.announcement")} lgWidth={5}>
               <FormControl fullWidth>
-                <DenseFilledTextField inputProps={{ readOnly: true }} fullWidth multiline rows={4} />
+                <FormControlLabel
+                  control={
+                    <Switch checked={announcementEnabled} onChange={(e) => setAnnouncementEnabled(e.target.checked)} />
+                  }
+                  label={t("settings.announcement")}
+                />
+                <DenseFilledTextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  value={announcementContent}
+                  onChange={(e) => setAnnouncementContent(e.target.value)}
+                />
                 <NoMarginHelperText>{t("settings.announcementDes")}</NoMarginHelperText>
+                <Box sx={{ mt: 1 }}>
+                  <LoadingButton loading={announcementSaving} onClick={saveAnnouncement} variant={"contained"}>
+                    {t("settings.save")}
+                  </LoadingButton>
+                </Box>
               </FormControl>
             </SettingForm>
             <SettingForm title={t("settings.tosUrl")} lgWidth={5}>
@@ -229,7 +278,7 @@ const SiteInformation = () => {
                 <NoMarginHelperText>{t("vas.showAppPromotionDes")}</NoMarginHelperText>
               </FormControl>
             </SettingForm>
-            <SettingForm title={t("vas.appFeedback")} lgWidth={5} pro>
+            <SettingForm title={t("vas.appFeedback")} lgWidth={5}>
               <FormControl fullWidth>
                 <DenseFilledTextField
                   fullWidth
@@ -242,7 +291,7 @@ const SiteInformation = () => {
                 <NoMarginHelperText>{t("vas.appLinkDes")}</NoMarginHelperText>
               </FormControl>
             </SettingForm>
-            <SettingForm title={t("vas.appForum")} lgWidth={5} pro>
+            <SettingForm title={t("vas.appForum")} lgWidth={5}>
               <FormControl fullWidth>
                 <DenseFilledTextField fullWidth slotProps={{ input: { readOnly: true } }} />
                 <NoMarginHelperText>{t("vas.appLinkDes")}</NoMarginHelperText>

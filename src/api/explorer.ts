@@ -35,6 +35,16 @@ export interface FileResponse {
   folder_summary?: FolderSummary;
   extended_info?: ExtendedInfo;
   primary_entity?: string;
+  preferred_storage_policy_id?: number;
+  permissions?: FileAccessRule;
+}
+
+export interface FileAccessRule {
+  allow_users?: number[];
+  deny_users?: number[];
+  allow_groups?: number[];
+  deny_groups?: number[];
+  anonymous?: number;
 }
 
 export interface FolderSummary {
@@ -90,6 +100,12 @@ export interface Share {
   source_uri?: string;
   password?: string;
   show_readme?: boolean;
+  price?: number;
+  allow_upload?: boolean;
+  allow_modify?: boolean;
+  allow_delete?: boolean;
+  allow_anonymous_upload?: boolean;
+  purchased?: boolean;
 }
 
 export enum PolicyType {
@@ -308,6 +324,11 @@ export interface ShareCreateService {
   expire?: number;
   share_view?: boolean;
   show_readme?: boolean;
+  price?: number;
+  allow_upload?: boolean;
+  allow_modify?: boolean;
+  allow_delete?: boolean;
+  allow_anonymous_upload?: boolean;
 }
 
 export interface CreateFileService {

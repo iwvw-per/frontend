@@ -34,6 +34,7 @@ const CustomContentRoot = styled(SideNavItemBase)<{
   transitionProperty: "opacity,box-shadow,background-color",
   boxShadow: isDropOver ? `inset 0 0 0 2px ${theme.palette.primary.light}` : "none",
   height: "32px",
+  marginTop: "4px",
 }));
 
 const StyledTreeItemRoot = styled(TreeItem)(() => ({

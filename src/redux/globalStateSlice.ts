@@ -1,15 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import {
-  ConflictDetail,
-  DirectLink,
-  FileResponse,
-  Share,
-  StoragePolicy,
-  Viewer,
-  ViewerSession,
-} from "../api/explorer.ts";
+import { ConflictDetail, DirectLink, FileResponse, Share, Viewer, ViewerSession } from "../api/explorer.ts";
 import { Response } from "../api/request.ts";
 import { AppRegistration, User } from "../api/user.ts";
+import { UserPolicy } from "../api/proPolicy.ts";
 import { SelectType } from "../component/Uploader/core";
 import SessionManager, { UserSettings } from "../session";
 
@@ -156,6 +149,19 @@ export interface GlobalStateSlice {
   manageShareDialogOpen?: boolean;
   manageShareDialogFile?: FileResponse;
 
+  // File permission dialog
+  filePermissionDialogOpen?: boolean;
+  filePermissionDialogFile?: FileResponse;
+
+  // Set preferred storage policy dialog
+  preferredPolicyDialogOpen?: boolean;
+  preferredPolicyDialogFile?: FileResponse;
+
+  // Relocate storage policy dialog
+  relocateDialogOpen?: boolean;
+  relocateDialogTargets?: FileResponse[];
+  relocateDialogFmIndex?: number;
+
   // Stale version action dialog
   staleVersionDialogOpen?: boolean;
   staleVersionUri?: string;
@@ -262,7 +268,7 @@ export interface GlobalStateSlice {
   uploadRawFiles?: File[];
   uploadRawPromiseId?: string[];
 
-  policyOptionCache?: StoragePolicy[];
+  policyOptionCache?: UserPolicy[];
 
   // Search popup
   searchPopupOpen?: boolean;
@@ -394,7 +400,7 @@ export const globalStateSlice = createSlice({
     closeRemoteDownloadDialog: (state) => {
       state.remoteDownloadDialogOpen = false;
     },
-    setPolicyOptionCache: (state, action: PayloadAction<StoragePolicy[] | undefined>) => {
+    setPolicyOptionCache: (state, action: PayloadAction<UserPolicy[] | undefined>) => {
       state.policyOptionCache = action.payload;
     },
     resetDialogs: (state) => {
@@ -405,6 +411,7 @@ export const globalStateSlice = createSlice({
       state.shareLinkDialogOpen = state.shareLinkDialogOpen ? false : undefined;
       state.versionControlDialogOpen = state.versionControlDialogOpen ? false : undefined;
       state.manageShareDialogOpen = state.manageShareDialogOpen ? false : undefined;
+      state.filePermissionDialogOpen = state.filePermissionDialogOpen ? false : undefined;
       state.createNewDialogOpen = state.createNewDialogOpen ? false : undefined;
       state.selectOptionDialogOpen = state.selectOptionDialogOpen ? false : undefined;
       state.batchDownloadLogDialogOpen = state.batchDownloadLogDialogOpen ? false : undefined;
@@ -771,6 +778,28 @@ export const globalStateSlice = createSlice({
     closeManageShareDialog: (state) => {
       state.manageShareDialogOpen = false;
     },
+    setFilePermissionDialog: (state, action: PayloadAction<{ open: boolean; file?: FileResponse }>) => {
+      state.filePermissionDialogOpen = action.payload.open;
+      state.filePermissionDialogFile = action.payload.file;
+    },
+    closeFilePermissionDialog: (state) => {
+      state.filePermissionDialogOpen = false;
+    },
+    setPreferredPolicyDialog: (state, action: PayloadAction<{ open: boolean; file?: FileResponse }>) => {
+      state.preferredPolicyDialogOpen = action.payload.open;
+      state.preferredPolicyDialogFile = action.payload.file;
+    },
+    closePreferredPolicyDialog: (state) => {
+      state.preferredPolicyDialogOpen = false;
+    },
+    setRelocateDialog: (state, action: PayloadAction<{ open: boolean; targets: FileResponse[]; fmIndex?: number }>) => {
+      state.relocateDialogOpen = action.payload.open;
+      state.relocateDialogTargets = action.payload.targets;
+      state.relocateDialogFmIndex = action.payload.fmIndex;
+    },
+    closeRelocateDialog: (state) => {
+      state.relocateDialogOpen = false;
+    },
     setImageViewer: (state, action: PayloadAction<ImageViewerState>) => {
       state.imageViewer = action.payload;
     },
@@ -898,6 +927,12 @@ export const {
   closeImageViewer,
   setManageShareDialog,
   closeManageShareDialog,
+  setFilePermissionDialog,
+  closeFilePermissionDialog,
+  setPreferredPolicyDialog,
+  closePreferredPolicyDialog,
+  setRelocateDialog,
+  closeRelocateDialog,
   setVersionControlDialog,
   closeVersionControlDialog,
   closeSidebar,

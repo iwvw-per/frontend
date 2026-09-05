@@ -5,7 +5,7 @@ import { NoWrapTypography } from "../../Common/StyledComponents.tsx";
 const StyledButtonBase = styled(ButtonBase)<{
   active?: boolean;
 }>(({ theme, active }) => ({
-  borderRadius: "90px",
+  borderRadius: "8px",
   display: "flex",
   justifyContent: "left",
   alignItems: "initial",
@@ -38,6 +38,7 @@ const StyledSideNavItem = styled(SideNavItemBase)<{ level?: number }>(({ theme, 
   padding: "4px",
   paddingLeft: `${28 + (level ?? 0) * 16}px`,
   height: "32px",
+  marginTop: "4px",
   display: "flex",
   alignItems: "center",
 }));

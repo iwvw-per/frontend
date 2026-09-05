@@ -26,7 +26,9 @@ import BookInformation from "../../../Icons/BookInformation.tsx";
 import ClockArrowDownload from "../../../Icons/ClockArrowDownload.tsx";
 import Eye from "../../../Icons/Eye.tsx";
 import TableSettingsOutlined from "../../../Icons/TableSettings.tsx";
+import Tag from "../../../Icons/Tag.tsx";
 import Timer from "../../../Icons/Timer.tsx";
+import Upload from "../../../Icons/Upload.tsx";
 
 const Accordion = styled(MuiAccordion)(() => ({
   border: "0px solid rgba(0, 0, 0, .125)",
@@ -82,6 +84,13 @@ export interface ShareSetting {
   downloads?: boolean;
   expires?: boolean;
 
+  // 分享写协作与定价（PRO）
+  price?: number;
+  allow_upload?: boolean;
+  allow_modify?: boolean;
+  allow_delete?: boolean;
+  allow_anonymous_upload?: boolean;
+
   downloads_val: valueOption;
   expires_val: valueOption;
 }
@@ -132,13 +141,26 @@ const ShareSettingContent = ({ setting, file, editing, onSettingChange }: ShareS
     setExpanded(isExpanded ? panel : undefined);
   };
 
-  const handleCheck = (prop: "is_private" | "share_view" | "show_readme" | "expires" | "downloads") => () => {
-    if (!setting[prop]) {
-      handleExpand(prop)(null, true);
-    }
+  const handleCheck =
+    (
+      prop:
+        | "is_private"
+        | "share_view"
+        | "show_readme"
+        | "expires"
+        | "downloads"
+        | "allow_upload"
+        | "allow_modify"
+        | "allow_delete"
+        | "allow_anonymous_upload",
+    ) =>
+    () => {
+      if (!setting[prop]) {
+        handleExpand(prop)(null, true);
+      }
 
-    onSettingChange({ ...setting, [prop]: !setting[prop] });
-  };
+      onSettingChange({ ...setting, [prop]: !setting[prop] });
+    };
 
   return (
     <List
@@ -234,6 +256,112 @@ const ShareSettingContent = ({ setting, file, editing, onSettingChange }: ShareS
           </Accordion>
         </>
       )}
+      <Accordion expanded={expanded === "share_collab"} onChange={handleExpand("share_collab")}>
+        <AccordionSummary aria-controls="panel1a-content" id="panel1a-header">
+          <StyledListItemButton>
+            <ListItemIcon>
+              <Upload />
+            </ListItemIcon>
+            <ListItemText primary={t("application:modals.shareCollab")} />
+            <ListItemSecondaryAction>
+              <Checkbox
+                checked={!!setting.allow_upload || !!setting.allow_modify || !!setting.allow_delete}
+                onClick={() => {
+                  const enabled = !(setting.allow_upload || setting.allow_modify || setting.allow_delete);
+                  onSettingChange({
+                    ...setting,
+                    allow_upload: enabled,
+                    allow_modify: enabled,
+                    allow_delete: enabled,
+                    allow_anonymous_upload: enabled ? setting.allow_anonymous_upload : false,
+                  });
+                }}
+              />
+            </ListItemSecondaryAction>
+          </StyledListItemButton>
+        </AccordionSummary>
+        <AccordionDetails sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <Typography variant="body2">{t("application:modals.shareCollabDes")}</Typography>
+          <Stack sx={{ mt: 1, width: "100%" }}>
+            <SmallFormControlLabel
+              control={
+                <Checkbox size="small" checked={!!setting.allow_upload} onChange={handleCheck("allow_upload")} />
+              }
+              label={t("application:modals.allowUpload")}
+            />
+            <SmallFormControlLabel
+              control={
+                <Checkbox size="small" checked={!!setting.allow_modify} onChange={handleCheck("allow_modify")} />
+              }
+              label={t("application:modals.allowModify")}
+            />
+            <SmallFormControlLabel
+              control={
+                <Checkbox size="small" checked={!!setting.allow_delete} onChange={handleCheck("allow_delete")} />
+              }
+              label={t("application:modals.allowDelete")}
+            />
+            {setting.allow_upload && (
+              <SmallFormControlLabel
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={!!setting.allow_anonymous_upload}
+                    onChange={handleCheck("allow_anonymous_upload")}
+                  />
+                }
+                label={t("application:modals.allowAnonymousUpload")}
+              />
+            )}
+          </Stack>
+        </AccordionDetails>
+      </Accordion>
+      <Accordion expanded={expanded === "share_price"} onChange={handleExpand("share_price")}>
+        <AccordionSummary aria-controls="panel1a-content" id="panel1a-header">
+          <StyledListItemButton>
+            <ListItemIcon>
+              <Tag />
+            </ListItemIcon>
+            <ListItemText primary={t("application:modals.sharePrice")} />
+            <ListItemSecondaryAction>
+              <Checkbox
+                checked={!!setting.price && setting.price > 0}
+                onChange={() => {
+                  onSettingChange({
+                    ...setting,
+                    price: setting.price && setting.price > 0 ? 0 : 1,
+                  });
+                }}
+              />
+            </ListItemSecondaryAction>
+          </StyledListItemButton>
+        </AccordionSummary>
+        <AccordionDetails sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <Typography variant="body2">{t("application:modals.sharePriceDes")}</Typography>
+          {setting.price !== undefined && setting.price > 0 && (
+            <Stack sx={{ mt: 1, width: "100%" }}>
+              <FormControl variant="standard" fullWidth sx={{ mt: 1 }}>
+                <FilledTextField
+                  label={t("application:modals.sharePrice")}
+                  type="number"
+                  inputProps={{
+                    min: 1,
+                  }}
+                  value={setting.price ?? 0}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    onSettingChange({
+                      ...setting,
+                      price: isNaN(value) || value < 0 ? 0 : value,
+                    });
+                  }}
+                  required
+                />
+              </FormControl>
+            </Stack>
+          )}
+        </AccordionDetails>
+      </Accordion>
       <Accordion expanded={expanded === "expires"} onChange={handleExpand("expires")}>
         <AccordionSummary aria-controls="panel1a-content" id="panel1a-header">
           <StyledListItemButton>

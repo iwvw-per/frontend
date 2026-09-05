@@ -16,6 +16,7 @@ import SessionManager from "../../../session";
 import { useContext, useState } from "react";
 import { DrawerPopover } from "./AppDrawer.tsx";
 import { PageVariant, PageVariantContext } from "../NavBarFrame.tsx";
+import CurrentStoragePolicyIndicator from "../../FileManager/TopBar/CurrentStoragePolicyIndicator.tsx";
 
 interface AppBarProps extends MuiAppBarProps {
   open?: boolean;
@@ -120,6 +121,7 @@ const TopAppBar = () => {
           {musicPlayer && <MusicPlayer />}
           {!isMobile ? (
             <>
+              {isMainPage && <CurrentStoragePolicyIndicator />}
               <DarkThemeSwitcher />
               {isLogin && (
                 <Tooltip title={t("navbar.setting")}>

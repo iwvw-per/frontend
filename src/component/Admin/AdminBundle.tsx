@@ -1,6 +1,9 @@
 import EntitySetting from "./Entity/EntitySetting";
 import FileSetting from "./File/FileSetting";
 import FileSystem from "./FileSystem/Filesystem";
+import AbuseList from "./Abuse/AbuseList";
+import EventList from "./Event/EventList";
+import PaymentList from "./Payment/PaymentList";
 import EditGroup from "./Group/EditGroup/EditGroup";
 import GroupSetting from "./Group/GroupSetting";
 import Home from "./Home/Home";
@@ -17,11 +20,13 @@ import TaskList from "./Task/TaskList";
 import UserSetting from "./User/UserSetting";
 
 export {
+  AbuseList,
   EditGroup,
   EditNode,
   EditOAuthClient,
   EditStoragePolicy,
   EntitySetting,
+  EventList,
   FileSetting,
   FileSystem,
   GroupSetting,
@@ -29,6 +34,7 @@ export {
   NodeSetting,
   OAuthClientSetting,
   OauthCallback,
+  PaymentList,
   Settings,
   ShareList,
   StoragePolicySetting,

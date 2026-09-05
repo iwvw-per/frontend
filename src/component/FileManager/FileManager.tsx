@@ -14,6 +14,7 @@ import { ReadMe } from "./ReadMe/ReadMe.tsx";
 import Sidebar from "./Sidebar/Sidebar.tsx";
 import SidebarDialog from "./Sidebar/SidebarDialog.tsx";
 import NavHeader from "./TopBar/NavHeader.tsx";
+import ShareCollabToolbar from "./TopBar/ShareCollabToolbar.tsx";
 
 export const FileManagerIndex = {
   main: 0,
@@ -95,6 +96,7 @@ export const FileManager = ({ index = 0, initialPath, skipRender }: FileManagerP
         spacing={1}
       >
         <NavHeader />
+        <ShareCollabToolbar />
         <Box sx={{ display: "flex", flexGrow: 1, overflowY: "auto" }}>
           <Explorer />
           {index == FileManagerIndex.main && (isTablet ? <SidebarDialog /> : <Sidebar />)}

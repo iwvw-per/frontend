@@ -35,6 +35,11 @@ const shareToSetting = (share: ShareModel, t: TFunction): ShareSetting => {
     share_view: share.share_view,
     show_readme: share.show_readme,
     downloads: share.remain_downloads != undefined && share.remain_downloads > 0,
+    price: share.price,
+    allow_upload: share.allow_upload,
+    allow_modify: share.allow_modify,
+    allow_delete: share.allow_delete,
+    allow_anonymous_upload: share.allow_anonymous_upload,
 
     expires_val: expireOptions[2],
     downloads_val: downloadOptions[0],

@@ -1,7 +1,18 @@
 import { Box, Divider, ListItemIcon, ListItemText, Menu, MenuItem, styled, Typography, useTheme } from "@mui/material";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { closeContextMenu } from "../../../redux/fileManagerSlice.ts";
+import { Share } from "../../../api/explorer.ts";
+import { deleteFromShare, renameInShare } from "../../../api/proShareCollab.ts";
+import {
+  closeContextMenu,
+  closeRenameFileModal,
+  setFileDeleteModal,
+  setRenameFileModalLoading,
+} from "../../../redux/fileManagerSlice.ts";
+import { deleteConfirmation, renameForm } from "../../../redux/thunks/dialog.ts";
+import { queueLoadShareInfo } from "../../../redux/thunks/share.ts";
+import SessionManager from "../../../session/index.ts";
+import CrUri, { Filesystem } from "../../../util/uri.ts";
 import { CreateNewDialogType } from "../../../redux/globalStateSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks.ts";
 import { downloadFiles } from "../../../redux/thunks/download.ts";
@@ -101,6 +112,88 @@ const ContextMenu = ({ fmIndex = 0 }: ContextMenuProps) => {
   }, [targetOverwrite, selected]);
 
   const parent = useAppSelector((state) => state.fileManager[fmIndex].list?.parent);
+  const currentFs = useAppSelector((state) => state.fileManager[fmIndex].current_fs);
+  const isShareFs = currentFs === Filesystem.share;
+  const [shareCollabInfo, setShareCollabInfo] = useState<Share | null>(null);
+
+  const shareId = targets.length > 0 ? new CrUri(targets[0].path).id() : undefined;
+
+  useEffect(() => {
+    if (!isShareFs || !contextMenuOpen || targets.length === 0 || !shareId) {
+      setShareCollabInfo(null);
+      return;
+    }
+    dispatch(queueLoadShareInfo(new CrUri(targets[0].path)))
+      .then(setShareCollabInfo)
+      .catch(() => setShareCollabInfo(null));
+  }, [isShareFs, contextMenuOpen, shareId, targets, dispatch]);
+
+  const currentUser = SessionManager.currentLoginOrNull();
+  const unlockedShare = shareCollabInfo ? (shareCollabInfo.price ?? 0) <= 0 || !!shareCollabInfo.purchased : false;
+  const showShareRename =
+    isShareFs &&
+    targets.length === 1 &&
+    !!shareCollabInfo &&
+    !!shareCollabInfo.allow_modify &&
+    !!currentUser &&
+    unlockedShare;
+  const showShareDelete =
+    isShareFs &&
+    targets.length > 0 &&
+    !!shareCollabInfo &&
+    !!shareCollabInfo.allow_delete &&
+    !!currentUser &&
+    unlockedShare;
+
+  const onShareRename = useCallback(async () => {
+    if (!shareCollabInfo || !shareId || targets.length !== 1) {
+      return;
+    }
+    dispatch(closeContextMenu({ index: fmIndex, value: undefined }));
+    let newName = "";
+    try {
+      newName = await dispatch(renameForm(fmIndex, targets[0]));
+    } catch {
+      // operation canceled
+      return;
+    }
+    dispatch(setRenameFileModalLoading({ index: fmIndex, value: true }));
+    try {
+      await dispatch(renameInShare(shareId, targets[0].path, newName));
+      await dispatch(refreshFileList(fmIndex));
+    } catch {
+      // error snackbar is handled by send()
+    } finally {
+      dispatch(closeRenameFileModal({ index: fmIndex, value: undefined }));
+    }
+  }, [shareCollabInfo, shareId, targets, fmIndex, dispatch]);
+
+  const onShareDelete = useCallback(async () => {
+    if (!shareCollabInfo || !shareId || targets.length === 0) {
+      return;
+    }
+    dispatch(closeContextMenu({ index: fmIndex, value: undefined }));
+    try {
+      await dispatch(deleteConfirmation(fmIndex, targets));
+    } catch {
+      // operation canceled
+      return;
+    }
+    dispatch(setFileDeleteModal({ index: fmIndex, value: [true, targets, undefined, true] }));
+    try {
+      await dispatch(
+        deleteFromShare(
+          shareId,
+          targets.map((f) => f.path),
+        ),
+      );
+      await dispatch(refreshFileList(fmIndex));
+    } catch {
+      // error snackbar is handled by send()
+    } finally {
+      dispatch(setFileDeleteModal({ index: fmIndex, value: [false, targets, undefined, true] }));
+    }
+  }, [shareCollabInfo, shareId, targets, fmIndex, dispatch]);
 
   const displayOpt = useActionDisplayOpt(targets, contextMenuType, parent, fmIndex);
   const onClose = useCallback(() => {
@@ -125,11 +218,12 @@ const ContextMenu = ({ fmIndex = 0 }: ContextMenuProps) => {
     displayOpt.showShare ||
     displayOpt.showRename ||
     displayOpt.showCopy ||
-    displayOpt.showDirectLink;
+    displayOpt.showDirectLink ||
+    showShareRename;
   let part3 =
     displayOpt.showTags || displayOpt.showOrganize || displayOpt.showMore || displayOpt.showNewFileFromTemplate;
   let part4 = displayOpt.showInfo || displayOpt.showGoToParent || displayOpt.showGoToSharedLink;
-  let part5 = displayOpt.showRestore || displayOpt.showDelete || displayOpt.showRefresh;
+  let part5 = displayOpt.showRestore || displayOpt.showDelete || displayOpt.showRefresh || showShareDelete;
   const showDivider1 = part1 && part2;
   const showDivider2 = part2 && part3;
   const showDivider3 = part3 && part4;
@@ -263,6 +357,14 @@ const ContextMenu = ({ fmIndex = 0 }: ContextMenuProps) => {
           <ListItemText>{t("application:fileManager.rename")}</ListItemText>
         </SquareMenuItem>
       )}
+      {showShareRename && (
+        <SquareMenuItem onClick={onShareRename}>
+          <ListItemIcon>
+            <RenameOutlined fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>{t("application:fileManager.rename")}</ListItemText>
+        </SquareMenuItem>
+      )}
       {displayOpt.showCopy && (
         <SquareMenuItem onClick={() => dispatch(dialogBasedMoveCopy(fmIndex, targets, true))}>
           <ListItemIcon>
@@ -304,7 +406,7 @@ const ContextMenu = ({ fmIndex = 0 }: ContextMenuProps) => {
           title={t("application:fileManager.moreActions")}
           icon={<WrenchSettings fontSize="small" />}
         >
-          <MoreMenuItems displayOpt={displayOpt} targets={targets} />
+          <MoreMenuItems displayOpt={displayOpt} targets={targets} fmIndex={fmIndex} />
         </CascadingSubmenu>
       )}
       {displayOpt.showNewFileFromTemplate && <NewFileTemplateMenuItems displayOpt={displayOpt} targets={targets} />}
@@ -352,6 +454,14 @@ const ContextMenu = ({ fmIndex = 0 }: ContextMenuProps) => {
       )}
       {displayOpt.showDelete && (
         <SquareMenuItem hoverColor={theme.palette.error.light} onClick={() => dispatch(deleteFile(fmIndex, targets))}>
+          <ListItemIcon>
+            <DeleteOutlined fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>{t("application:fileManager.delete")}</ListItemText>
+        </SquareMenuItem>
+      )}
+      {showShareDelete && (
+        <SquareMenuItem hoverColor={theme.palette.error.light} onClick={onShareDelete}>
           <ListItemIcon>
             <DeleteOutlined fontSize="small" />
           </ListItemIcon>

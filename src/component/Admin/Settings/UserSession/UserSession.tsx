@@ -1,22 +1,52 @@
 import { Box, FormControl, FormControlLabel, Link, ListItemText, Stack, Switch, Typography } from "@mui/material";
-import { useContext, useMemo } from "react";
+import { LoadingButton } from "@mui/lab";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { isTrueVal } from "../../../../session/utils.ts";
+import { useAppDispatch } from "../../../../redux/hooks.ts";
 import SizeInput from "../../../Common/SizeInput.tsx";
 import { DenseFilledTextField, DenseSelect } from "../../../Common/StyledComponents.tsx";
 import { SquareMenuItem } from "../../../FileManager/ContextMenu/ContextMenu.tsx";
-import SettingForm, { ProChip } from "../../../Pages/Setting/SettingForm.tsx";
+import SettingForm from "../../../Pages/Setting/SettingForm.tsx";
 import { Code } from "../../../Common/Code.tsx";
 import GroupSelectionInput from "../../Common/GroupSelectionInput.tsx";
 import SharesInput from "../../Common/SharesInput.tsx";
 import { NoMarginHelperText, SettingSection, SettingSectionContent } from "../Settings.tsx";
 import { SettingContext } from "../SettingWrapper.tsx";
 import SSOSettings from "./SSOSettings.tsx";
+import { loadEmailFilterSettings, saveEmailFilterSettings } from "../../../../api/proEmail.ts";
 
 const UserSession = () => {
   const { t } = useTranslation("dashboard");
+  const dispatch = useAppDispatch();
   const { formRef, setSettings, values } = useContext(SettingContext);
+
+  const [emailFilter, setEmailFilter] = useState<Record<string, string>>({});
+  const [emailFilterLoading, setEmailFilterLoading] = useState(true);
+  const [emailFilterSaving, setEmailFilterSaving] = useState(false);
+
+  useEffect(() => {
+    setEmailFilterLoading(true);
+    dispatch(loadEmailFilterSettings())
+      .then((res) => {
+        setEmailFilter((res ?? {}) as Record<string, string>);
+      })
+      .finally(() => setEmailFilterLoading(false));
+  }, [dispatch]);
+
+  const patchEmailFilter = (key: string, value: string) => {
+    setEmailFilter((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const saveEmailFilter = () => {
+    setEmailFilterSaving(true);
+    dispatch(saveEmailFilterSettings(emailFilter))
+      .then((res) => {
+        setEmailFilter((res ?? {}) as Record<string, string>);
+      })
+      .finally(() => setEmailFilterSaving(false));
+  };
 
   const defaultSymbolics = useMemo(() => {
     let result: number[] = [];
@@ -127,7 +157,7 @@ const UserSession = () => {
                 <NoMarginHelperText>{t("settings.defaultGroupDes")}</NoMarginHelperText>
               </FormControl>
             </SettingForm>
-            <SettingForm title={t("settings.defaultSymbolics")} lgWidth={5} pro>
+            <SettingForm title={t("settings.defaultSymbolics")} lgWidth={5}>
               <FormControl>
                 <SharesInput />
                 <NoMarginHelperText>
@@ -139,9 +169,13 @@ const UserSession = () => {
                 </NoMarginHelperText>
               </FormControl>
             </SettingForm>
-            <SettingForm title={t("vas.filterEmailProvider")} lgWidth={5} pro>
+            <SettingForm title={t("vas.filterEmailProvider")} lgWidth={5}>
               <FormControl>
-                <DenseSelect value={0}>
+                <DenseSelect
+                  value={emailFilter["filter_email_provider"] ?? "0"}
+                  onChange={(e) => patchEmailFilter("filter_email_provider", String(e.target.value))}
+                  disabled={emailFilterLoading}
+                >
                   {["filterEmailProviderDisabled", "filterEmailProviderWhitelist", "filterEmailProviderBlacklist"].map(
                     (v, i) => (
                       <SquareMenuItem value={i.toString()}>
@@ -159,17 +193,33 @@ const UserSession = () => {
                 <NoMarginHelperText>{t("vas.filterEmailProviderDes")}</NoMarginHelperText>
               </FormControl>
             </SettingForm>
-            <SettingForm lgWidth={5} pro>
+            <SettingForm title={t("vas.filterEmailProviderRule")} lgWidth={5}>
               <FormControl fullWidth>
-                <FormControlLabel
-                  control={<Switch checked={false} />}
-                  label={
-                    <>
-                      {t("vas.disableSubAddressEmail")}
-                      <ProChip label="Pro" color="primary" size="small" />
-                    </>
-                  }
+                <DenseFilledTextField
+                  value={emailFilter["filter_email_provider_rules"] ?? ""}
+                  onChange={(e) => patchEmailFilter("filter_email_provider_rules", e.target.value)}
+                  disabled={emailFilterLoading}
+                  placeholder={"gmail.com,qq.com"}
                 />
+                <NoMarginHelperText>
+                  <Trans i18nKey="vas.filterEmailProviderRuleDes" ns={"dashboard"} components={[<Code />]} />
+                </NoMarginHelperText>
+              </FormControl>
+            </SettingForm>
+            <Box>
+              <LoadingButton
+                loading={emailFilterSaving}
+                onClick={saveEmailFilter}
+                disabled={emailFilterLoading}
+                variant={"outlined"}
+                size={"small"}
+              >
+                {t("settings.save")}
+              </LoadingButton>
+            </Box>
+            <SettingForm lgWidth={5}>
+              <FormControl fullWidth>
+                <FormControlLabel control={<Switch checked={false} />} label={<>{t("vas.disableSubAddressEmail")}</>} />
                 <NoMarginHelperText>
                   <Trans i18nKey="vas.disableSubAddressEmailDes" ns={"dashboard"} components={[<Code />]} />
                 </NoMarginHelperText>
@@ -179,7 +229,7 @@ const UserSession = () => {
         </SettingSection>
         <SettingSection>
           <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center" }}>
-            {t("settings.thirdPartySignIn")} <ProChip label="Pro" color="primary" size="small" />
+            {t("settings.thirdPartySignIn")}
           </Typography>
           <SettingSectionContent>
             <SettingForm lgWidth={5}>

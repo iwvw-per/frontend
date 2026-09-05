@@ -8,22 +8,29 @@ import FacebookCircularProgress from "../../../Common/CircularProgress";
 import { DenseSelect, SquareChip } from "../../../Common/StyledComponents";
 import { SquareMenuItem } from "../../../FileManager/ContextMenu/ContextMenu";
 export interface PolicySelectionInputProps {
-  value: number;
-  onChange: (value: number) => void;
+  value: number | number[];
+  onChange: (value: number | number[]) => void;
+  multiple?: boolean;
 }
 
-const PolicySelectionInput = ({ value, onChange }: PolicySelectionInputProps) => {
+const PolicySelectionInput = ({ value, onChange, multiple = false }: PolicySelectionInputProps) => {
   const { t } = useTranslation("dashboard");
   const dispatch = useAppDispatch();
   const [policies, setPolicies] = useState<StoragePolicy[]>([]);
   const [loading, setLoading] = useState(false);
   const [policyMap, setPolicyMap] = useState<Record<number, StoragePolicy>>({});
 
+  const selectedIds: number[] = multiple ? (Array.isArray(value) ? value : []) : [value as number];
+
   const handleChange = (event: SelectChangeEvent<unknown>) => {
     const {
-      target: { value },
+      target: { value: rawValue },
     } = event;
-    onChange(value as number);
+    if (multiple) {
+      onChange((rawValue as number[]) ?? []);
+    } else {
+      onChange(rawValue as number);
+    }
   };
 
   useEffect(() => {
@@ -49,8 +56,9 @@ const PolicySelectionInput = ({ value, onChange }: PolicySelectionInputProps) =>
   return (
     <FormControl fullWidth>
       <DenseSelect
-        value={value}
-        required
+        value={multiple ? selectedIds : value}
+        multiple={multiple}
+        required={!multiple}
         onChange={handleChange}
         sx={{
           minHeight: 39,
@@ -66,15 +74,24 @@ const PolicySelectionInput = ({ value, onChange }: PolicySelectionInputProps) =>
             },
           },
         }}
-        renderValue={(selected: number) => (
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-            {!loading ? (
-              <SquareChip size="small" key={selected} label={policyMap[selected]?.name} />
-            ) : (
-              <FacebookCircularProgress size={20} sx={{ mt: "1px" }} />
-            )}
-          </Box>
-        )}
+        renderValue={(selected: unknown) => {
+          const ids = multiple ? (selected as number[]) ?? [] : [selected as number];
+          return (
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+              {!loading ? (
+                ids.length > 0 ? (
+                  ids.map((id) => <SquareChip size="small" key={id} label={policyMap[id]?.name} />)
+                ) : (
+                  <Typography variant="body2" color={"textSecondary"}>
+                    {"-"}
+                  </Typography>
+                )
+              ) : (
+                <FacebookCircularProgress size={20} sx={{ mt: "1px" }} />
+              )}
+            </Box>
+          );
+        }}
       >
         {policies.length > 0 &&
           policies.map((policy) => (

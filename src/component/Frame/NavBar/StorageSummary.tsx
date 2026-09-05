@@ -8,7 +8,7 @@ import { RadiusFrame } from "../RadiusFrame.tsx";
 
 const StyledBox = styled(RadiusFrame)(({ theme }) => ({
   padding: theme.spacing(1, 2, 1, 2),
-  margin: theme.spacing(0, 2, 0, 2),
+  margin: 0,
 }));
 
 const StorageHeaderContainer = styled("div")(() => ({

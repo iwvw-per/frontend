@@ -271,6 +271,7 @@ const Uploader = () => {
         selectFile={selectFile}
         onClose={() => dispatch(closeUploadTaskList())}
         setUploaders={setUploaders}
+        folderPolicy={policy}
       />
     </>
   );

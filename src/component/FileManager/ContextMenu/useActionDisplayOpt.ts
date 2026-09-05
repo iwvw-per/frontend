@@ -79,6 +79,9 @@ export interface DisplayOption {
   showManageShares?: boolean;
   showCreateArchive?: boolean;
   showResetThumb?: boolean;
+  showRelocate?: boolean;
+  showPreferredPolicy?: boolean;
+  showPermission?: boolean;
 
   andCapability?: Boolset;
   orCapability?: Boolset;
@@ -297,11 +300,30 @@ export const getActionOpt = (
     groupBs.enabled(GroupPermission.archive_task) &&
     display.orCapability &&
     display.orCapability.enabled(NavigatorCapability.download_file);
+  display.showRelocate =
+    display.hasUpdatable &&
+    !!currentUser &&
+    display.orCapability &&
+    display.orCapability.enabled(NavigatorCapability.download_file);
   display.showResetThumb =
     display.hasFile &&
     !display.hasFolder &&
     display.hasFailedThumb &&
     display.allUpdatable &&
+    display.orCapability &&
+    display.orCapability.enabled(NavigatorCapability.update_metadata);
+  display.showPermission =
+    targets.length == 1 &&
+    display.allUpdatable &&
+    display.orCapability &&
+    (targets[0].owned || groupBs.enabled(GroupPermission.is_admin)) &&
+    display.orCapability.enabled(NavigatorCapability.update_metadata);
+  display.showPreferredPolicy =
+    targets.length == 1 &&
+    display.hasFolder &&
+    !display.hasFile &&
+    display.allUpdatable &&
+    targets[0].owned &&
     display.orCapability &&
     display.orCapability.enabled(NavigatorCapability.update_metadata);
 
@@ -310,7 +332,10 @@ export const getActionOpt = (
     display.showManageShares ||
     display.showCreateArchive ||
     display.showDirectLinkManagement ||
-    display.showResetThumb;
+    display.showResetThumb ||
+    display.showPermission ||
+    display.showPreferredPolicy ||
+    display.showRelocate;
   return display;
 };
 

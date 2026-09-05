@@ -33,6 +33,9 @@ import React from "react";
 import ColumnSetting from "../Explorer/ListView/ColumnSetting.tsx";
 import DirectLinks from "./DirectLinks/DirectLinks.tsx";
 import DirectLinksControl from "./DirectLinksControl.tsx";
+import SetPermission from "./SetPermission.tsx";
+import Relocate from "./Relocate.tsx";
+import SetPreferredPolicyDialog from "./SetPreferredPolicyDialog.tsx";
 
 const Dialogs = () => {
   const showCreateArchive = useAppSelector((state) => state.globalState.createArchiveDialogOpen);
@@ -45,6 +48,9 @@ const Dialogs = () => {
   const directLinkManagement = useAppSelector((state) => state.globalState.directLinkManagementDialogOpen);
   const archivePreview = useAppSelector((state) => state.globalState.archiveViewer);
   const desktopMountSetup = useAppSelector((state) => state.globalState.desktopMountSetupDialogOpen);
+  const filePermissionDialogOpen = useAppSelector((state) => state.globalState.filePermissionDialogOpen);
+  const preferredPolicyDialogOpen = useAppSelector((state) => state.globalState.preferredPolicyDialogOpen);
+  const relocateDialogOpen = useAppSelector((state) => state.globalState.relocateDialogOpen);
 
   return (
     <>
@@ -81,6 +87,9 @@ const Dialogs = () => {
       {directLinkManagement != undefined && <DirectLinksControl />}
       {archivePreview != undefined && <ArchivePreview />}
       {desktopMountSetup != undefined && <DesktopMountSetup />}
+      {filePermissionDialogOpen != undefined && <SetPermission />}
+      {preferredPolicyDialogOpen != undefined && <SetPreferredPolicyDialog />}
+      {relocateDialogOpen != undefined && <Relocate />}
     </>
   );
 };

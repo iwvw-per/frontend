@@ -1,10 +1,10 @@
 import {
-  Box,
   CircularProgress,
   Collapse,
   FormControl,
   FormControlLabel,
   Link,
+  MenuItem,
   Stack,
   Switch,
   Typography,
@@ -13,27 +13,54 @@ import {
 import { lazy, Suspense, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
-import { GroupEnt } from "../../../../api/dashboard";
+import { getNodeList } from "../../../../api/api";
+import { GroupEnt, Node, NodeStatus, NodeType } from "../../../../api/dashboard";
 import { GroupPermission } from "../../../../api/user";
+import { useAppDispatch } from "../../../../redux/hooks";
 import Boolset from "../../../../util/boolset";
 import SizeInput from "../../../Common/SizeInput";
-import { DenseFilledTextField } from "../../../Common/StyledComponents";
-import SettingForm, { ProChip } from "../../../Pages/Setting/SettingForm";
-import ProDialog from "../../Common/ProDialog";
+import { DenseFilledTextField, DenseSelect } from "../../../Common/StyledComponents";
+import SettingForm from "../../../Pages/Setting/SettingForm";
 import { NoMarginHelperText, SettingSection, SettingSectionContent } from "../../Settings/Settings";
 import { AnonymousGroupID } from "../GroupRow";
 import { GroupSettingContext } from "./GroupSettingWrapper";
-import MultipleNodeSelectionInput from "./MultipleNodeSelectionInput";
 
 const MonacoEditor = lazy(() => import("../../../Viewers/CodeViewer/MonacoEditor"));
 
 const FileManagementSection = () => {
   const { t } = useTranslation("dashboard");
   const { values, setGroup } = useContext(GroupSettingContext);
-  const [proOpen, setProOpen] = useState(false);
   const theme = useTheme();
+  const dispatch = useAppDispatch();
 
   const [editedConfig, setEditedConfig] = useState("");
+  const [loadingNodes, setLoadingNodes] = useState(true);
+  const [nodes, setNodes] = useState<Node[]>([]);
+
+  useEffect(() => {
+    setLoadingNodes(true);
+    dispatch(
+      getNodeList({
+        page_size: 1000,
+        page: 1,
+        order_by: "id",
+        order_direction: "asc",
+        conditions: {
+          node_status: NodeStatus.active,
+        },
+      }),
+    )
+      .then((res) => {
+        setNodes(res.nodes.filter((n) => n.type != NodeType.master));
+      })
+      .finally(() => {
+        setLoadingNodes(false);
+      });
+  }, [dispatch]);
+
+  const allowedNodes = useMemo<number[]>(() => {
+    return (values.settings as any)?.allowed_nodes ?? [];
+  }, [values.settings]);
 
   const permission = useMemo(() => {
     return new Boolset(values.permissions ?? "");
@@ -134,6 +161,37 @@ const FileManagementSection = () => {
     [setGroup],
   );
 
+  const onAllowMigratePolicyChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setGroup((p: GroupEnt) => ({
+        ...p,
+        permissions: new Boolset(p.permissions).set(GroupPermission.migrate_policy, e.target.checked).toString(),
+      }));
+    },
+    [setGroup],
+  );
+
+  const onAllowSelectNodeChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setGroup((p: GroupEnt) => ({
+        ...p,
+        permissions: new Boolset(p.permissions).set(GroupPermission.allow_select_node, e.target.checked).toString(),
+      }));
+    },
+    [setGroup],
+  );
+
+  const onAllowedNodesChange = useCallback(
+    (e: any) => {
+      const selected = (e.target.value ?? []) as number[];
+      setGroup((p: GroupEnt) => ({
+        ...p,
+        settings: { ...p.settings, allowed_nodes: selected },
+      }));
+    },
+    [setGroup],
+  );
+
   const onMaxWalkedFilesChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setGroup((p: GroupEnt) => ({
@@ -154,14 +212,8 @@ const FileManagementSection = () => {
     [setGroup],
   );
 
-  const onProClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-    setProOpen(true);
-  }, []);
-
   return (
     <SettingSection>
-      <ProDialog open={proOpen} onClose={() => setProOpen(false)} />
       <Typography variant="h6" gutterBottom>
         {t("group.fileManagement")}
       </Typography>
@@ -196,15 +248,15 @@ const FileManagementSection = () => {
               </SettingForm>
             </Collapse>
             <SettingForm lgWidth={5}>
-              <FormControl fullWidth onClick={onProClick}>
+              <FormControl fullWidth>
                 <FormControlLabel
-                  control={<Switch checked={false} />}
-                  label={
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      {t("group.migratePolicy")}
-                      <ProChip size="small" label="Pro" />
-                    </Box>
+                  control={
+                    <Switch
+                      checked={permission.enabled(GroupPermission.migrate_policy)}
+                      onChange={onAllowMigratePolicyChange}
+                    />
                   }
+                  label={t("group.migratePolicy")}
                 />
                 <NoMarginHelperText>{t("group.migratePolicyDes")}</NoMarginHelperText>
               </FormControl>
@@ -323,22 +375,52 @@ const FileManagementSection = () => {
                 <NoMarginHelperText>{t("group.advanceDeleteDes")}</NoMarginHelperText>
               </FormControl>
             </SettingForm>
-            <SettingForm title={t("group.allowedNodes")} lgWidth={5} pro>
+            <SettingForm title={t("group.allowedNodes")} lgWidth={5}>
               <FormControl fullWidth>
-                <MultipleNodeSelectionInput />
+                <DenseSelect
+                  multiple
+                  displayEmpty
+                  disabled={loadingNodes}
+                  value={allowedNodes}
+                  onChange={onAllowedNodesChange}
+                  renderValue={(selected) => {
+                    const sel = selected as number[];
+                    if (sel.length == 0) {
+                      return <em>{t("group.allNodes")}</em>;
+                    }
+                    const names = nodes.filter((n) => sel.includes(n.id)).map((n) => n.name);
+                    return names.join(", ");
+                  }}
+                  MenuProps={{
+                    PaperProps: { sx: { maxWidth: 230 } },
+                    MenuListProps: {
+                      sx: {
+                        "& .MuiMenuItem-root": {
+                          whiteSpace: "normal",
+                        },
+                      },
+                    },
+                  }}
+                >
+                  {nodes.map((n) => (
+                    <MenuItem key={n.id} value={n.id}>
+                      {n.name}
+                    </MenuItem>
+                  ))}
+                </DenseSelect>
                 <NoMarginHelperText>{t("group.allowedNodesDes")}</NoMarginHelperText>
               </FormControl>
             </SettingForm>
             <SettingForm lgWidth={5}>
-              <FormControl fullWidth onClick={onProClick}>
+              <FormControl fullWidth>
                 <FormControlLabel
-                  control={<Switch checked={false} />}
-                  label={
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      {t("group.allowSelectNode")}
-                      <ProChip size="small" label="Pro" />
-                    </Box>
+                  control={
+                    <Switch
+                      checked={permission.enabled(GroupPermission.allow_select_node)}
+                      onChange={onAllowSelectNodeChange}
+                    />
                   }
+                  label={t("group.allowSelectNode")}
                 />
                 <NoMarginHelperText>{t("group.allowSelectNodeDes")}</NoMarginHelperText>
               </FormControl>

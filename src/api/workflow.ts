@@ -35,7 +35,7 @@ export interface TaskSummary {
     src_str?: string;
     dst?: string;
     src_multiple?: string[];
-    dst_policy_id?: string;
+    dst_policy_id?: string | number;
     failed?: number;
     total?: number;
     download?: DownloadTaskStatus;
@@ -138,6 +138,7 @@ export enum TaskType {
   full_text_change_owner = "full_text_change_owner",
   full_text_delete = "full_text_delete",
   full_text_rebuild = "full_text_rebuild",
+  relocate = "relocate",
 }
 
 export enum TaskStatus {

@@ -90,8 +90,13 @@ export const GroupPermission = {
   webdav_proxy: 6,
   share_download: 7,
   remote_download: 9,
+  share_free: 8,
+  esclate_anonymity: 13,
   redirected_source: 11,
   advance_delete: 12,
+  folder_direct_link: 10,
+  migrate_policy: 14,
+  allow_select_node: 15,
   unique_direct_link: 17,
 };
 

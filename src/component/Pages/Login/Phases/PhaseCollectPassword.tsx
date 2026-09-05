@@ -6,6 +6,7 @@ import { Captcha, CaptchaParams } from "../../../Common/Captcha/Captcha.tsx";
 import { OutlineIconTextField } from "../../../Common/Form/OutlineIconTextField.tsx";
 import Password from "../../../Icons/Password.tsx";
 import PasskeyLoginButton from "../Signin/PasskeyLoginButton.tsx";
+import SSOLoginButtons from "../Signin/SSOLoginButtons.tsx";
 import { Control } from "../Signin/SignIn.tsx";
 
 interface PhaseCollectPasswordProps {
@@ -85,6 +86,7 @@ const PhaseCollectPassword = ({
       <Stack spacing={1}>
         {loginOptions?.webauthn_enabled && authn && <PasskeyLoginButton onLoginSuccess={onOAuthPasskeyLogin} />}
       </Stack>
+      <SSOLoginButtons loginOptions={loginOptions} />
       {control?.back}
     </>
   );

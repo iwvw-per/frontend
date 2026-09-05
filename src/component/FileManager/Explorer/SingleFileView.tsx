@@ -4,8 +4,11 @@ import {
   Button,
   ButtonGroup,
   Container,
+  DialogContent,
   Divider,
   Link,
+  ListItemText,
+  SelectChangeEvent,
   Stack,
   styled,
   Typography,
@@ -13,10 +16,13 @@ import {
   useTheme,
 } from "@mui/material";
 import { bindPopover, usePopupState } from "material-ui-popup-state/hooks";
+import { useSnackbar } from "notistack";
 import React, { forwardRef, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { FileResponse, Share } from "../../../api/explorer.ts";
+import { reportShare } from "../../../api/proAbuse.ts";
+import { buyShare } from "../../../api/proShareCollab.ts";
 import { bindDelayedHover } from "../../../hooks/delayedHover.tsx";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks.ts";
 import { downloadSingleFile } from "../../../redux/thunks/download.ts";
@@ -26,17 +32,23 @@ import { openViewers } from "../../../redux/thunks/viewer.ts";
 import SessionManager from "../../../session/index.ts";
 import { sizeToString } from "../../../util/index.ts";
 import CrUri from "../../../util/uri.ts";
-import { SecondaryButton } from "../../Common/StyledComponents.tsx";
+import { DenseFilledTextField, DenseSelect, SecondaryButton } from "../../Common/StyledComponents.tsx";
+import { DefaultCloseAction } from "../../Common/Snackbar/snackbar.tsx";
 import UserAvatar from "../../Common/User/UserAvatar.tsx";
+import DraggableDialog from "../../Dialogs/DraggableDialog.tsx";
 import CaretDown from "../../Icons/CaretDown.tsx";
 import Download from "../../Icons/Download.tsx";
 import Eye from "../../Icons/Eye.tsx";
 import FolderLink from "../../Icons/FolderLink.tsx";
 import Open from "../../Icons/Open.tsx";
+import Tag from "../../Icons/Tag.tsx";
 import Timer from "../../Icons/Timer.tsx";
+import Warning from "../../Icons/Warning.tsx";
 import useActionDisplayOpt from "../ContextMenu/useActionDisplayOpt.ts";
+import { SquareMenuItem } from "../ContextMenu/ContextMenu.tsx";
 import { FmIndexContext } from "../FmIndexContext.tsx";
 import { PropTypography, ShareExpires, ShareStatistics } from "../TopBar/ShareInfoPopover.tsx";
+import SettingForm from "../../Pages/Setting/SettingForm.tsx";
 import FileIcon from "./FileIcon.tsx";
 import FileTagSummary from "./FileTagSummary.tsx";
 import { useFileBlockState } from "./GridView/GridFile.tsx";
@@ -121,10 +133,21 @@ const SingleFileView = forwardRef((_props, ref: React.Ref<any>) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const dispatch = useAppDispatch();
+  const { enqueueSnackbar } = useSnackbar();
   const fmIndex = useContext(FmIndexContext);
   const file = useAppSelector((state) => state.fileManager[fmIndex].list?.files[0]);
   const [loading, setLoading] = useState(false);
   const [shareInfo, setShareInfo] = useState<Share | null>(null);
+  const [purchased, setPurchased] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDescription, setReportDescription] = useState("");
+  const [reportLoading, setReportLoading] = useState(false);
+
+  const reportReasonOptions = useMemo(() => {
+    const options = t("application:vas.reportReasonOptions", { returnObjects: true });
+    return Array.isArray(options) ? (options as string[]) : [];
+  }, [t]);
 
   const displayOpt = useActionDisplayOpt(file ? [file] : []);
 
@@ -133,6 +156,7 @@ const SingleFileView = forwardRef((_props, ref: React.Ref<any>) => {
       dispatch(queueLoadShareInfo(new CrUri(file.path)))
         .then((info) => {
           setShareInfo(info);
+          setPurchased(!!info.purchased);
         })
         .catch((_e) => {
           setShareInfo(null);
@@ -144,6 +168,49 @@ const SingleFileView = forwardRef((_props, ref: React.Ref<any>) => {
       setShareInfo(null);
     }
   }, [file]);
+
+  const buy = useCallback(async () => {
+    if (!shareInfo) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await dispatch(buyShare(shareInfo.id));
+      if (res?.purchased) {
+        setPurchased(true);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [shareInfo, dispatch]);
+
+  const report = useCallback(async () => {
+    if (!shareInfo) {
+      return;
+    }
+    setReportLoading(true);
+    try {
+      await dispatch(
+        reportShare(shareInfo.id, {
+          reason: reportReason || undefined,
+          description: reportDescription || undefined,
+        }),
+      );
+      setReportOpen(false);
+      setReportReason("");
+      setReportDescription("");
+      enqueueSnackbar({
+        message: t("application:vas.reportAbuseSuccess"),
+        variant: "success",
+        action: DefaultCloseAction,
+      });
+    } catch {
+      // error snackbar is handled by the request layer
+    } finally {
+      setReportLoading(false);
+    }
+  }, [shareInfo, dispatch, reportReason, reportDescription, enqueueSnackbar, t]);
 
   const openMore = useCallback(
     (e: React.MouseEvent<any>) => {
@@ -241,6 +308,13 @@ const SingleFileView = forwardRef((_props, ref: React.Ref<any>) => {
             >
               <Box></Box>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                {!!user && shareInfo && (shareInfo.price ?? 0) > 0 && !purchased && (
+                  <SecondaryButton variant="contained" onClick={buy} disabled={loading} startIcon={<Tag />}>
+                    {t("application:share.buyWithCredits", {
+                      price: shareInfo.price ?? 0,
+                    })}
+                  </SecondaryButton>
+                )}
                 {!!user && file && (
                   <SecondaryButton
                     variant="contained"
@@ -261,6 +335,9 @@ const SingleFileView = forwardRef((_props, ref: React.Ref<any>) => {
                     {t("application:fileManager.open")}
                   </SecondaryButton>
                 )}
+                <SecondaryButton variant="contained" onClick={() => setReportOpen(true)} startIcon={<Warning />}>
+                  {t("application:vas.report")}
+                </SecondaryButton>
                 <ButtonGroup disableElevation variant="contained">
                   <Button onClick={download} disabled={loading} startIcon={<Download />}>
                     {t("application:fileManager.download")}
@@ -274,6 +351,57 @@ const SingleFileView = forwardRef((_props, ref: React.Ref<any>) => {
           </ShareContainer>
         </Container>
       )}
+      <DraggableDialog
+        title={t("application:vas.report")}
+        dialogProps={{
+          open: reportOpen,
+          onClose: () => setReportOpen(false),
+          maxWidth: "sm",
+          fullWidth: true,
+        }}
+        showActions
+        showCancel
+        onAccept={report}
+        loading={reportLoading}
+        disabled={!reportReason}
+      >
+        <DialogContent>
+          <Stack spacing={3}>
+            <SettingForm title={t("application:vas.reportTarget")} noContainer lgWidth={12}>
+              <Typography variant="body2">#{shareInfo?.id}</Typography>
+            </SettingForm>
+            <SettingForm title={t("application:vas.reportReason")} noContainer lgWidth={12}>
+              <DenseSelect
+                fullWidth
+                value={reportReason}
+                onChange={(e: SelectChangeEvent<unknown>) => setReportReason(e.target.value as string)}
+                displayEmpty
+              >
+                <SquareMenuItem value="" disabled>
+                  <ListItemText slotProps={{ primary: { variant: "body2", style: { fontStyle: "italic" } } }}>
+                    {t("application:vas.reportReason")}
+                  </ListItemText>
+                </SquareMenuItem>
+                {reportReasonOptions.map((option) => (
+                  <SquareMenuItem value={option} key={option}>
+                    <ListItemText slotProps={{ primary: { variant: "body2" } }}>{option}</ListItemText>
+                  </SquareMenuItem>
+                ))}
+              </DenseSelect>
+            </SettingForm>
+            <SettingForm title={t("application:vas.reportDescription")} noContainer lgWidth={12}>
+              <DenseFilledTextField
+                fullWidth
+                multiline
+                minRows={3}
+                placeholder={t("application:vas.reportDescription")}
+                value={reportDescription}
+                onChange={(e) => setReportDescription(e.target.value)}
+              />
+            </SettingForm>
+          </Stack>
+        </DialogContent>
+      </DraggableDialog>
     </Stack>
   );
 });

@@ -5,6 +5,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { useLocation } from "react-router-dom";
 import { setMobileDrawerOpen } from "../../redux/globalStateSlice.ts";
 import { useAppDispatch } from "../../redux/hooks.ts";
+import AnnouncementBanner from "./AnnouncementBanner.tsx";
 import ContextMenu from "../FileManager/ContextMenu/ContextMenu.tsx";
 import Dialogs from "../FileManager/Dialogs/Dialogs.tsx";
 import DragLayer from "../FileManager/Dnd/DragLayer.tsx";
@@ -53,6 +54,7 @@ const NavBarFrame = ({ variant }: NavBarFrameProps) => {
         }}
       >
         <DndProvider backend={HTML5Backend}>
+          <AnnouncementBanner />
           {!isMobile && variant != PageVariant.dashboard && !isTouch && <DragLayer />}
           {!isMobile && !isTouch && <SplitHandle />}
           <TopAppBar />

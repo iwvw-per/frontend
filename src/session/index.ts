@@ -269,6 +269,50 @@ export class Manager {
     this.syncToStore();
   }
 
+  // 返回当前设备上已登录（未登出且有有效 token）的账号列表，供账号切换 UI 使用
+  public listAccounts = (): Session[] => {
+    return Object.values(this.state.sessions).filter(
+      (s) => s && !s.signedOut && s.token && s.token.access_token && s.user && s.user.id,
+    );
+  };
+
+  // 切换到指定账号：校验存在后改写 active token 对应会话
+  public switchAccount = (uid: string): Session => {
+    const target = this.state.sessions[uid];
+    if (!target || target.signedOut || !target.token?.access_token) {
+      throw new NoSesssionSelected();
+    }
+    this.state.current = uid;
+    this.syncToStore();
+    return target;
+  };
+
+  // 退出指定账号：若退出的是当前账号，则自动切换到另一个有效账号
+  // 返回退出后的当前 uid（可能为 undefined）
+  public signOutAccount = (uid: string): string | undefined => {
+    const wasCurrent = this.state.current === uid;
+    if (this.state.sessions[uid]) {
+      this.state.sessions[uid].signedOut = true;
+      this.state.sessions[uid].token = {
+        access_token: "",
+        refresh_token: "",
+        access_expires: "",
+        refresh_expires: "",
+      };
+    }
+
+    if (wasCurrent) {
+      this.state.current = undefined;
+      const next = Object.keys(this.state.sessions).find(
+        (k) => k !== uid && !this.state.sessions[k].signedOut && !!this.state.sessions[k].token?.access_token,
+      );
+      this.state.current = next;
+    }
+
+    this.syncToStore();
+    return this.state.current;
+  };
+
   private syncToStore = () => {
     localStorage.setItem(SESSION_KEY, JSON.stringify(this.state));
   };

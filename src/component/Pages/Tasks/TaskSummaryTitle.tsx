@@ -1,11 +1,12 @@
 import { Box, Chip, styled, Typography } from "@mui/material";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { FileType } from "../../../api/explorer.ts";
 import { TaskSummary, TaskType } from "../../../api/workflow.ts";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks.ts";
 import { newMyUri } from "../../../util/uri.ts";
 import FileBadge from "../../FileManager/FileBadge.tsx";
+import { loadPolicyOptionCache } from "../../../redux/thunks/proPolicy.ts";
 
 export interface TaskSummaryTitleProps {
   type: string;
@@ -30,6 +31,10 @@ const TaskSummaryTitle = ({ type, summary, isInDashboard = false }: TaskSummaryT
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const policyOption = useAppSelector((state) => state.globalState.policyOptionCache);
+
+  useEffect(() => {
+    dispatch(loadPolicyOptionCache());
+  }, [dispatch]);
 
   const selectedCount = useMemo(() => {
     let selected = 0;
@@ -103,6 +108,28 @@ const TaskSummaryTitle = ({ type, summary, isInDashboard = false }: TaskSummaryT
               simplifiedFile={{
                 type: FileType.folder,
                 path: summary?.props.dst ? summary?.props.dst : newMyUri("").toString(),
+              }}
+            />,
+          ]}
+        />
+      );
+    case TaskType.relocate:
+      return (
+        <Trans
+          i18nKey="setting.relocateFileTo"
+          values={{
+            policy: policyOption
+              ? policyOption.find((p) => String(p.storage_policy_id) === String(summary?.props.dst_policy_id))?.name ??
+                "Unknown"
+              : "",
+            more: (summary?.props.src_multiple?.length ?? 0) > 3 ? "..." : "",
+          }}
+          components={[
+            <StyledFileBadge
+              variant={"outlined"}
+              simplifiedFile={{
+                type: FileType.folder,
+                path: summary?.props.src ? summary?.props.src : newMyUri("").toString(),
               }}
             />,
           ]}

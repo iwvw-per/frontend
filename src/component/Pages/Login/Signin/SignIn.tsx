@@ -478,6 +478,7 @@ const EmailLogin = ({ oauthConsent }: SignInProps) => {
                   email={email}
                   setEmail={setEmail}
                   control={phaseConfig.control}
+                  loginOptions={loginOptions}
                   onOAuthPasskeyLogin={isOAuthFlow ? handleOAuthSessionSwitch : undefined}
                 />
               )}

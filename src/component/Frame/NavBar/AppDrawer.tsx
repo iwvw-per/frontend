@@ -5,7 +5,7 @@ import SessionManager from "../../../session";
 import TreeNavigation from "../../FileManager/TreeView/TreeNavigation.tsx";
 import { PageVariant, PageVariantContext } from "../NavBarFrame.tsx";
 import DrawerHeader from "./DrawerHeader.tsx";
-import PageNavigation, { AdminPageNavigation } from "./PageNavigation.tsx";
+import PageNavigation, { AdminPageNavigation, BottomPageNavigation } from "./PageNavigation.tsx";
 import StorageSummary from "./StorageSummary.tsx";
 
 const DrawerContent = () => {
@@ -17,7 +17,7 @@ const DrawerContent = () => {
   const pageVariant = useContext(PageVariantContext);
   const isDashboard = pageVariant === PageVariant.dashboard;
   return (
-    <>
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <DrawerHeader />
       <Stack
         direction={"column"}
@@ -35,7 +35,6 @@ const DrawerContent = () => {
           <>
             <TreeNavigation scrollRef={scrollRef} hideWithDrawer={!isMobile} />
             <PageNavigation />
-            {user && <StorageSummary />}
           </>
         )}
         {isDashboard && <AdminPageNavigation />}
@@ -45,7 +44,26 @@ const DrawerContent = () => {
           </Box>
         )}
       </Stack>
-    </>
+      {!isDashboard && user && (
+        <Box
+          sx={{
+            px: 1,
+            pb: 1,
+            mx: 1,
+            display: "flex",
+            flexDirection: "column",
+            borderTop: 1,
+            borderColor: "divider",
+            pt: 1,
+          }}
+        >
+          <BottomPageNavigation />
+          <Box sx={{ mt: 0.5 }}>
+            <StorageSummary />
+          </Box>
+        </Box>
+      )}
+    </Box>
   );
 };
 
@@ -55,7 +73,7 @@ export const DrawerPopover = (props: PopoverProps) => {
   const drawerWidth = useAppSelector((state) => state.globalState.drawerWidth);
   return (
     <Popover {...props}>
-      <Box sx={{ width: "70vw" }}>
+      <Box sx={{ width: "70vw", height: "100%" }}>
         <DrawerContent />
       </Box>
     </Popover>

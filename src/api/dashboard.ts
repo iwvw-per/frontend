@@ -237,6 +237,9 @@ export interface PolicySetting {
   media_meta_generator_proxy?: boolean;
   thumb_generator_proxy?: boolean;
   native_media_processing?: boolean;
+  load_balancer?: {
+    weights?: Record<string, number>;
+  };
   s3_delete_batch_size?: number;
   stream_saver?: boolean;
   use_cname?: boolean;

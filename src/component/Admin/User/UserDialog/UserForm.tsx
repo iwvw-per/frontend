@@ -1,4 +1,3 @@
-import { OpenInNew } from "@mui/icons-material";
 import {
   Box,
   Collapse,
@@ -18,16 +17,16 @@ import { useCallback, useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { sendCalibrateUserStorage } from "../../../../api/api";
 import { UserStatus } from "../../../../api/dashboard";
+import { adjustCredit } from "../../../../api/proVAS";
 import { useAppDispatch } from "../../../../redux/hooks";
 import { DefaultCloseAction } from "../../../Common/Snackbar/snackbar";
 import { DenseFilledTextField, DenseSelect, SecondaryButton } from "../../../Common/StyledComponents";
 import UserAvatar from "../../../Common/User/UserAvatar";
 import { SquareMenuItem } from "../../../FileManager/ContextMenu/ContextMenu";
 import Delete from "../../../Icons/Delete";
-import SettingForm, { ProChip } from "../../../Pages/Setting/SettingForm";
+import SettingForm from "../../../Pages/Setting/SettingForm";
 import { CapacityBar } from "../../../Pages/Setting/StorageSetting";
 import GroupSelectionInput from "../../Common/GroupSelectionInput";
-import ProDialog from "../../Common/ProDialog";
 import { NoMarginHelperText } from "../../Settings/Settings";
 import { UserDialogContext } from "./UserDialog";
 
@@ -38,7 +37,6 @@ const UserForm = ({ reload, setLoading }: { reload: () => void; setLoading: (loa
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { t } = useTranslation("dashboard");
   const { formRef, values, setUser } = useContext(UserDialogContext);
-  const [proOpen, setProOpen] = useState(false);
 
   const removeAvatar = useCallback(() => {
     setUser((prev) => ({ ...prev, avatar: undefined }));
@@ -107,9 +105,46 @@ const UserForm = ({ reload, setLoading }: { reload: () => void; setLoading: (loa
     [dispatch, values.id],
   );
 
+  const [creditAdjustAmount, setCreditAdjustAmount] = useState("");
+  const [creditAdjustReason, setCreditAdjustReason] = useState("");
+  const [adjustingCredit, setAdjustingCredit] = useState(false);
+
+  const onAdjustCredit = useCallback(async () => {
+    if (!values.hash_id) {
+      return;
+    }
+    const amount = Number(creditAdjustAmount);
+    if (!Number.isFinite(amount)) {
+      return;
+    }
+    setAdjustingCredit(true);
+    try {
+      const res = await dispatch(
+        adjustCredit(values.hash_id, {
+          amount,
+          reason: creditAdjustReason || undefined,
+        }),
+      );
+      if (res) {
+        setUser((prev) => ({ ...prev, credit: res.credit }));
+        setCreditAdjustAmount("");
+        setCreditAdjustReason("");
+        reload();
+        enqueueSnackbar({
+          message: t("user.adjustCreditSuccess", "Credits adjusted."),
+          variant: "success",
+          action: DefaultCloseAction,
+        });
+      }
+    } catch {
+      // error snackbar is handled by the request layer
+    } finally {
+      setAdjustingCredit(false);
+    }
+  }, [dispatch, values.hash_id, creditAdjustAmount, creditAdjustReason, reload, setUser, enqueueSnackbar, t]);
+
   return (
     <Box component={"form"} ref={formRef} onSubmit={(e) => e.preventDefault()}>
-      <ProDialog open={proOpen} onClose={() => setProOpen(false)} />
       <Stack spacing={isMobile ? 2 : 3} direction={isMobile ? "column" : "row"}>
         <Stack spacing={isMobile ? 2 : 3} direction={"column"} sx={{ minWidth: 200 }}>
           <SettingForm title={t("user.avatar")} noContainer lgWidth={12}>
@@ -147,16 +182,6 @@ const UserForm = ({ reload, setLoading }: { reload: () => void; setLoading: (loa
               </Link>
             </Typography>
           </SettingForm>
-          <Box>
-            <SecondaryButton
-              sx={{ mt: 1 }}
-              onClick={() => setProOpen(true)}
-              variant="contained"
-              startIcon={<OpenInNew />}
-            >
-              {t("user.openUserFiles")} <ProChip label="Pro" color="primary" size="small" />
-            </SecondaryButton>
-          </Box>
         </Stack>
         <Divider orientation="vertical" flexItem />
         <Box sx={{ flexGrow: 1 }}>
@@ -183,18 +208,34 @@ const UserForm = ({ reload, setLoading }: { reload: () => void; setLoading: (loa
             <SettingForm title={t("user.group")} noContainer lgWidth={6}>
               <GroupSelectionInput value={values.group_users?.toString() ?? ""} onChange={onGroupChange} fullWidth />
             </SettingForm>
-            <SettingForm title={t("application:vas.points")} noContainer lgWidth={6} pro>
-              <DenseFilledTextField
-                slotProps={{
-                  htmlInput: {
-                    type: "number",
-                    min: 0,
-                    readOnly: true,
-                  },
-                }}
-                fullWidth
-                value={0}
-              />
+            <SettingForm title={t("application:vas.points")} noContainer lgWidth={12}>
+              <Stack spacing={1}>
+                <Stack direction={isMobile ? "column" : "row"} spacing={1} alignItems="center">
+                  <DenseFilledTextField
+                    fullWidth
+                    slotProps={{ htmlInput: { type: "number" } }}
+                    placeholder={t("user.creditAdjustAmount", "Adjustment amount")}
+                    value={creditAdjustAmount}
+                    onChange={(e) => setCreditAdjustAmount(e.target.value)}
+                  />
+                  <SecondaryButton
+                    variant="contained"
+                    onClick={onAdjustCredit}
+                    disabled={adjustingCredit || !creditAdjustAmount}
+                  >
+                    {t("user.adjustCredit", "Adjust credits")}
+                  </SecondaryButton>
+                </Stack>
+                <DenseFilledTextField
+                  fullWidth
+                  placeholder={t("user.creditAdjustReason", "Reason (optional)")}
+                  value={creditAdjustReason}
+                  onChange={(e) => setCreditAdjustReason(e.target.value)}
+                />
+                <NoMarginHelperText>
+                  {t("user.creditCurrent", "Current credits: {{credit}}", { credit: values.credit ?? 0 })}
+                </NoMarginHelperText>
+              </Stack>
             </SettingForm>
             <SettingForm title={t("user.password")} noContainer lgWidth={6}>
               <DenseFilledTextField
@@ -210,7 +251,7 @@ const UserForm = ({ reload, setLoading }: { reload: () => void; setLoading: (loa
                 type={"password"}
               />
             </SettingForm>
-            <SettingForm title={t("user.originUserGroup")} noContainer lgWidth={6} pro>
+            <SettingForm title={t("user.originUserGroup")} noContainer lgWidth={6}>
               <GroupSelectionInput
                 value={" "}
                 onChange={() => {}}
@@ -220,7 +261,7 @@ const UserForm = ({ reload, setLoading }: { reload: () => void; setLoading: (loa
               />
               <NoMarginHelperText>{t("user.originUserGroupDes")}</NoMarginHelperText>
             </SettingForm>
-            <SettingForm title={t("user.groupExpired")} noContainer lgWidth={6} pro>
+            <SettingForm title={t("user.groupExpired")} noContainer lgWidth={6}>
               <DenseFilledTextField fullWidth value={""} />
               <NoMarginHelperText>{t("user.groupExpiredDes")}</NoMarginHelperText>
             </SettingForm>

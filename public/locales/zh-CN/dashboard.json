@@ -16,6 +16,7 @@
   },
   "nav": {
     "summary": "面板首页",
+    "abuse": "滥用举报",
     "settings": "参数设置",
     "basicSetting": "站点信息",
     "email": "邮件",
@@ -1755,6 +1756,9 @@
     "reporterID": "举报者用户 ID",
     "reportedUserID": "举报对象用户 ID",
     "shareID": "分享 ID",
-    "reason": "原因"
+    "reason": "原因",
+    "resolved": "已处理",
+    "ignored": "已忽略",
+    "status": "状态"
   }
 }

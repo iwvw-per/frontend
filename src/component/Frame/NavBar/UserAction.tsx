@@ -17,6 +17,7 @@ import { bindTrigger, usePopupState } from "material-ui-popup-state/hooks";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { addAccount, listSavedAccounts, signOutAccount, switchAccount } from "../../../api/proAccount.ts";
 import { GroupPermission } from "../../../api/user.ts";
 import { useAppDispatch } from "../../../redux/hooks.ts";
 import { signout } from "../../../redux/thunks/session.ts";
@@ -24,6 +25,8 @@ import SessionManager, { Session } from "../../../session";
 import { GroupBS } from "../../../session/utils.ts";
 import UserAvatar from "../../Common/User/UserAvatar.tsx";
 import { SquareMenuItem } from "../../FileManager/ContextMenu/ContextMenu.tsx";
+import Add from "../../Icons/Add.tsx";
+import Checkmark from "../../Icons/Checkmark.tsx";
 import HomeOutlined from "../../Icons/HomeOutlined.tsx";
 import Person from "../../Icons/Person.tsx";
 import SettingsOutlined from "../../Icons/SettingsOutlined.tsx";
@@ -74,6 +77,33 @@ const UserPopover = ({ open, onClose, ...rest }: PopoverProps) => {
     onClose && onClose({}, "backdropClick");
   }, [user?.id]);
 
+  const accounts = useMemo(() => listSavedAccounts(), []);
+
+  const switchToAccount = useCallback((uid: string) => {
+    try {
+      switchAccount(uid);
+    } catch {
+      return;
+    }
+    onClose && onClose({}, "backdropClick");
+    // 完整 reload 让会话/当前账号状态干净地重新初始化
+    window.location.assign(window.location.pathname + window.location.search);
+  }, []);
+
+  const signOutThisAccount = useCallback(() => {
+    const currentUid = SessionManager.currentLoginOrNull()?.user.id;
+    if (currentUid) {
+      signOutAccount(currentUid);
+    }
+    onClose && onClose({}, "backdropClick");
+    window.location.assign(window.location.pathname + window.location.search);
+  }, []);
+
+  const addNewAccount = useCallback(() => {
+    onClose && onClose({}, "backdropClick");
+    addAccount();
+  }, []);
+
   return (
     <Popover
       open={open}
@@ -112,6 +142,44 @@ const UserPopover = ({ open, onClose, ...rest }: PopoverProps) => {
           {user.email}
         </StyledTypography>
       </Box>
+      {accounts.length > 1 && (
+        <>
+          <Divider />
+          <Box sx={{ px: "12px", py: "4px" }}>
+            <StyledTypography variant={"caption"} color={"textSecondary"} fontWeight={600}>
+              {t("navbar.accounts")}
+            </StyledTypography>
+          </Box>
+          <MenuList dense sx={{ mx: 0.5 }}>
+            {accounts.map((acc) => (
+              <SquareMenuItem key={acc.uid} onClick={() => switchToAccount(acc.uid)}>
+                <ListItemIcon sx={{ minWidth: 32 }}>
+                  <UserAvatar sx={{ width: 22, height: 22 }} user={acc.user} />
+                </ListItemIcon>
+                <ListItemText
+                  primary={acc.user?.nickname}
+                  secondary={acc.user?.email}
+                  primaryTypographyProps={{ noWrap: true }}
+                  secondaryTypographyProps={{ noWrap: true }}
+                />
+                {acc.isCurrent && <Checkmark fontSize={"small"} />}
+              </SquareMenuItem>
+            ))}
+            <SquareMenuItem onClick={addNewAccount}>
+              <ListItemIcon>
+                <Add fontSize={"small"} />
+              </ListItemIcon>
+              <ListItemText>{t("navbar.addAccount")}</ListItemText>
+            </SquareMenuItem>
+            <SquareMenuItem onClick={signOutThisAccount}>
+              <ListItemIcon>
+                <SignOut />
+              </ListItemIcon>
+              <ListItemText>{t("navbar.signOutCurrent")}</ListItemText>
+            </SquareMenuItem>
+          </MenuList>
+        </>
+      )}
       <Divider />
       <MenuList dense sx={{ mx: 0.5 }}>
         {isAdmin && (

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -8,7 +8,10 @@ import {
   Dialog,
   DialogContent,
   Fade,
+  FormControl,
   IconButton,
+  MenuItem,
+  Select,
   Slide,
   SlideProps,
   styled,
@@ -23,7 +26,7 @@ import MoreActions from "./MoreActions.js";
 import { Virtuoso } from "react-virtuoso";
 import Base, { Status } from "../core/uploader/base";
 import { useTranslation } from "react-i18next";
-import { useAppSelector } from "../../../redux/hooks.ts";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks.ts";
 import { defaultPath } from "../../../hooks/useNavigation.tsx";
 import SessionManager, { UserSettings } from "../../../session";
 import Nothing from "../../Common/Nothing.tsx";
@@ -32,6 +35,8 @@ import MoreHorizontal from "../../Icons/MoreHorizontal.tsx";
 import Add from "../../Icons/Add.tsx";
 import { ExpandMoreRounded } from "@mui/icons-material";
 import { UploadProgressTotal } from "../../../redux/globalStateSlice.ts";
+import { getUserPolicies, UserPolicy } from "../../../api/proPolicy.ts";
+import { StoragePolicy } from "../../../api/explorer.ts";
 
 const Transition = React.forwardRef(function Transition(props: SlideProps, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -95,6 +100,7 @@ export interface TaskListProps {
   uploadManager: any;
   progress?: UploadProgressTotal;
   setUploaders: (f: (u: Base[]) => Base[]) => void;
+  folderPolicy?: StoragePolicy;
 }
 
 export default function TaskList({
@@ -106,9 +112,11 @@ export default function TaskList({
   uploadManager,
   progress,
   setUploaders,
+  folderPolicy,
 }: TaskListProps) {
   const { t } = useTranslation("application", { keyPrefix: "uploader" });
   const theme = useTheme();
+  const dispatch = useAppDispatch();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const path = useAppSelector((state) => state.fileManager[0].pure_path);
   const [expanded, setExpanded] = useState(true);
@@ -117,6 +125,29 @@ export default function TaskList({
   const [filter, setFilter] = useState(SessionManager.getWithFallback(UserSettings.TaskFilter));
   const [sorter, setSorter] = useState(SessionManager.getWithFallback(UserSettings.TaskSorter));
   const [refreshList, setRefreshList] = useState(false);
+  const [availablePolicies, setAvailablePolicies] = useState<UserPolicy[]>([]);
+  const [selectedPolicyId, setSelectedPolicyId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    dispatch(getUserPolicies())
+      .then((res) => {
+        const list = res ?? [];
+        setAvailablePolicies(list);
+        if (list.length > 1) {
+          const active = folderPolicy ? list.find((p) => p.id === folderPolicy.id) : undefined;
+          setSelectedPolicyId(active ? active.id : list[0]?.id ?? undefined);
+        }
+      })
+      .catch(() => {});
+  }, [dispatch]);
+
+  const onSelectPolicy = (id: string) => {
+    const policy = availablePolicies.find((p) => p.id === id);
+    setSelectedPolicyId(id);
+    if (policy) {
+      uploadManager?.setPolicy?.(policy, path ?? defaultPath);
+    }
+  };
 
   const handleActionClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -289,7 +320,25 @@ export default function TaskList({
               >
                 {t("uploadTasks")}
               </Typography>
-              <Box sx={{ display: "flex", gap: 1 }}>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                {availablePolicies.length > 1 && (
+                  <Tooltip title={t("selectPolicy")}>
+                    <FormControl size="small" sx={{ minWidth: 130 }}>
+                      <Select
+                        value={selectedPolicyId ?? ""}
+                        onChange={(e) => onSelectPolicy(e.target.value as string)}
+                        variant="standard"
+                        sx={{ fontSize: "0.8rem" }}
+                      >
+                        {availablePolicies.map((p) => (
+                          <MenuItem key={p.id} value={p.id}>
+                            {p.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Tooltip>
+                )}
                 <Tooltip title={t("moreActions")}>
                   <IconButton color="inherit" onClick={stopPop(handleActionClick)}>
                     <MoreHorizontal fontSize={"small"} />

@@ -2,12 +2,13 @@ import { Box, Divider, FormControl, Link, Stack } from "@mui/material";
 import { useEffect } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
-import { LoginResponse } from "../../../../api/user.ts";
+import { LoginResponse, PrepareLoginResponse } from "../../../../api/user.ts";
 import { useAppSelector } from "../../../../redux/hooks.ts";
 import { useQuery } from "../../../../util";
 import { OutlineIconTextField } from "../../../Common/Form/OutlineIconTextField.tsx";
 import MailOutlined from "../../../Icons/MailOutlined.tsx";
 import PasskeyLoginButton from "../Signin/PasskeyLoginButton.tsx";
+import SSOLoginButtons from "../Signin/SSOLoginButtons.tsx";
 import { Control } from "../Signin/SignIn.tsx";
 
 export const LegalLinks = () => {
@@ -46,10 +47,11 @@ interface PhaseCollectEmailProps {
   email: string;
   setEmail: (email: string) => void;
   control?: Control;
+  loginOptions?: PrepareLoginResponse;
   onOAuthPasskeyLogin?: (response: LoginResponse) => void;
 }
 
-const PhaseCollectEmail = ({ email, setEmail, control, onOAuthPasskeyLogin }: PhaseCollectEmailProps) => {
+const PhaseCollectEmail = ({ email, setEmail, control, loginOptions, onOAuthPasskeyLogin }: PhaseCollectEmailProps) => {
   const { t } = useTranslation();
   const query = useQuery();
   const { register_enabled, authn } = useAppSelector((state) => state.siteConfig.login.config);
@@ -85,6 +87,7 @@ const PhaseCollectEmail = ({ email, setEmail, control, onOAuthPasskeyLogin }: Ph
       </FormControl>
       {control?.submit}
       {control?.back}
+      <SSOLoginButtons loginOptions={loginOptions} />
       {register_enabled && (
         <Box sx={{ mt: 2, typography: "body2", textAlign: "center" }}>
           <Trans
