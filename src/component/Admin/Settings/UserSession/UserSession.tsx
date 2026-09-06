@@ -219,7 +219,16 @@ const UserSession = () => {
             </Box>
             <SettingForm lgWidth={5}>
               <FormControl fullWidth>
-                <FormControlLabel control={<Switch checked={false} />} label={<>{t("vas.disableSubAddressEmail")}</>} />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={emailFilter["disable_sub_address_email"] === "1"}
+                      onChange={(e) => patchEmailFilter("disable_sub_address_email", e.target.checked ? "1" : "0")}
+                      disabled={emailFilterLoading}
+                    />
+                  }
+                  label={<>{t("vas.disableSubAddressEmail")}</>}
+                />
                 <NoMarginHelperText>
                   <Trans i18nKey="vas.disableSubAddressEmailDes" ns={"dashboard"} components={[<Code />]} />
                 </NoMarginHelperText>

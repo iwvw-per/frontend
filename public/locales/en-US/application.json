@@ -117,6 +117,7 @@
     "trash": "Trash",
     "sharedWithMe": "Shared with me",
     "remoteDownload": "Remote Download",
+    "shop": "Shop",
     "connect": "Connect & Mount",
     "taskQueue": "Background Tasks",
     "setting": "Settings",
@@ -820,6 +821,24 @@
     "deleteRecord": "Delete record",
     "createdAt": "Created at: ",
     "unknownSize": "Unknown file size"
+  },
+  "shop": {
+    "title": "Store",
+    "creditBalance": "Credit balance: {{credit}}",
+    "giftCodePlaceholder": "Gift code",
+    "redeem": "Redeem",
+    "redeemSuccess": "Redeemed: {{product}}",
+    "redeemFailed": "Redeem failed",
+    "storagePack": "Storage packs",
+    "groupPack": "Membership",
+    "creditPack": "Credits",
+    "highlight": "Featured",
+    "price": "Price: {{price}}",
+    "buyWithCredits": "Buy with {{credits}} credits",
+    "payChannelNotConfigured": "No payment channel available",
+    "insufficientCredit": "Insufficient credits",
+    "purchaseSuccess": "Purchase successful",
+    "purchaseFailed": "Purchase failed"
   },
   "setting": {
     "treeView": "Tree view",

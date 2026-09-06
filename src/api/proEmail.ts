@@ -8,7 +8,11 @@ export const filterEmailProviderWhitelist = "1";
 export const filterEmailProviderBlacklist = "2";
 
 /** Setting keys owned by the PRO email domain filter feature. */
-export const emailFilterSettingKeys: string[] = ["filter_email_provider", "filter_email_provider_rules"];
+export const emailFilterSettingKeys: string[] = [
+  "filter_email_provider",
+  "filter_email_provider_rules",
+  "disable_sub_address_email",
+];
 
 export interface EmailFilterConfig {
   provider: string;

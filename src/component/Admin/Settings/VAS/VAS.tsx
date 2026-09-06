@@ -1,18 +1,8 @@
-import {
-  Box,
-  Button,
-  FormControl,
-  FormControlLabel,
-  InputAdornment,
-  Link,
-  Stack,
-  Switch,
-  Typography,
-} from "@mui/material";
-import { bindTrigger, usePopupState } from "material-ui-popup-state/hooks";
+import { Box, FormControl, FormControlLabel, ListItemText, Link, Stack, Switch, Typography } from "@mui/material";
 import { useContext, useMemo } from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { DenseFilledTextField } from "../../../Common/StyledComponents.tsx";
+import { DenseFilledTextField, DenseSelect } from "../../../Common/StyledComponents.tsx";
+import { SquareMenuItem } from "../../../FileManager/ContextMenu/ContextMenu.tsx";
 import SettingForm from "../../../Pages/Setting/SettingForm.tsx";
 import { NoMarginHelperText, SettingSection, SettingSectionContent } from "../Settings.tsx";
 import { SettingContext } from "../SettingWrapper.tsx";
@@ -20,23 +10,35 @@ import GiftCodes from "./GiftCodes.tsx";
 import GroupProducts from "./GroupProducts.tsx";
 import PaymentProviders from "./PaymentProviders.tsx";
 import StorageProducts from "./StorageProducts.tsx";
-interface CurrencyOption {
-  code: string;
-  symbol: string;
-  unit: number;
-  label: string;
-}
 
 const VAS = () => {
   const { t } = useTranslation("dashboard");
   const { formRef, setSettings, values } = useContext(SettingContext);
-  const currencyPopupState = usePopupState({
-    variant: "popover",
-    popupId: "currencySelector",
-  });
-  const paymentConfig = useMemo(() => JSON.parse(values.payment || "{}"), [values.payment]);
+
+  const paymentConfig = useMemo(() => {
+    try {
+      return JSON.parse(values.payment || "{}");
+    } catch {
+      return {};
+    }
+  }, [values.payment]);
   const storageProducts = useMemo(() => values.storage_products || "[]", [values.storage_products]);
   const groupSellData = useMemo(() => values.group_sell_data || "[]", [values.group_sell_data]);
+
+  const boolValue = (key: string): boolean => {
+    const v = values[key];
+    return v === "1" || v === "true";
+  };
+
+  const patchSetting = (key: string, value: string) => {
+    setSettings({ [key]: value });
+  };
+
+  const onSelectCurrency = (code: string, symbol: string, unit: number) => {
+    patchSetting("currency_code", code);
+    patchSetting("currency_symbol", symbol);
+    patchSetting("currency_unit", unit.toString());
+  };
 
   return (
     <Box component={"form"} ref={formRef}>
@@ -48,7 +50,15 @@ const VAS = () => {
           <SettingSectionContent>
             <SettingForm lgWidth={5}>
               <FormControl fullWidth>
-                <FormControlLabel control={<Switch checked={false} />} label={t("settings.enableCredit")} />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={boolValue("enable_credit")}
+                      onChange={(e) => patchSetting("enable_credit", e.target.checked ? "1" : "0")}
+                    />
+                  }
+                  label={t("settings.enableCredit")}
+                />
                 <NoMarginHelperText>{t("settings.enableCreditDes")}</NoMarginHelperText>
               </FormControl>
             </SettingForm>
@@ -56,14 +66,22 @@ const VAS = () => {
             <Stack spacing={2}>
               <SettingForm title={t("settings.creditPrice")} lgWidth={5}>
                 <FormControl fullWidth>
-                  <DenseFilledTextField type="number" slotProps={{ input: { readOnly: true } }} value={1} />
+                  <DenseFilledTextField
+                    type="number"
+                    value={values.credit_price ?? ""}
+                    onChange={(e) => patchSetting("credit_price", e.target.value)}
+                  />
                   <NoMarginHelperText>{t("settings.creditPriceDes")}</NoMarginHelperText>
                 </FormControl>
               </SettingForm>
 
               <SettingForm title={t("settings.shareScoreRate")} lgWidth={5}>
                 <FormControl fullWidth>
-                  <DenseFilledTextField type="number" value={80} slotProps={{ input: { readOnly: true } }} />
+                  <DenseFilledTextField
+                    type="number"
+                    value={values.share_score_rate ?? ""}
+                    onChange={(e) => patchSetting("share_score_rate", e.target.value)}
+                  />
                   <NoMarginHelperText>{t("settings.shareScoreRateDes")}</NoMarginHelperText>
                 </FormControl>
               </SettingForm>
@@ -71,14 +89,21 @@ const VAS = () => {
 
             <SettingForm title={t("vas.banBufferPeriod")} lgWidth={5}>
               <FormControl fullWidth>
-                <DenseFilledTextField type="number" slotProps={{ input: { readOnly: true } }} value={864000} />
+                <DenseFilledTextField
+                  type="number"
+                  value={values.ban_buffer_period ?? ""}
+                  onChange={(e) => patchSetting("ban_buffer_period", e.target.value)}
+                />
                 <NoMarginHelperText>{t("vas.banBufferPeriodDes")}</NoMarginHelperText>
               </FormControl>
             </SettingForm>
 
             <SettingForm title={t("settings.cronNotifyUser")} lgWidth={5}>
               <FormControl fullWidth>
-                <DenseFilledTextField value={"@every 1h"} slotProps={{ input: { readOnly: true } }} />
+                <DenseFilledTextField
+                  value={values.cron_notify_user ?? ""}
+                  onChange={(e) => patchSetting("cron_notify_user", e.target.value)}
+                />
                 <NoMarginHelperText>
                   <Trans
                     i18nKey="settings.cronDes"
@@ -94,7 +119,10 @@ const VAS = () => {
 
             <SettingForm title={t("settings.cronBanUser")} lgWidth={5}>
               <FormControl fullWidth>
-                <DenseFilledTextField value={"@every 1h"} slotProps={{ input: { readOnly: true } }} />
+                <DenseFilledTextField
+                  value={values.cron_ban_user ?? ""}
+                  onChange={(e) => patchSetting("cron_ban_user", e.target.value)}
+                />
                 <NoMarginHelperText>
                   <Trans
                     i18nKey="settings.cronDes"
@@ -110,14 +138,30 @@ const VAS = () => {
 
             <SettingForm lgWidth={5}>
               <FormControl fullWidth>
-                <FormControlLabel control={<Switch checked={false} />} label={t("settings.anonymousPurchase")} />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={boolValue("anonymous_purchase")}
+                      onChange={(e) => patchSetting("anonymous_purchase", e.target.checked ? "1" : "0")}
+                    />
+                  }
+                  label={t("settings.anonymousPurchase")}
+                />
                 <NoMarginHelperText>{t("settings.anonymousPurchaseDes")}</NoMarginHelperText>
               </FormControl>
             </SettingForm>
 
             <SettingForm lgWidth={5}>
               <FormControl fullWidth>
-                <FormControlLabel control={<Switch checked={false} />} label={t("settings.shopNavEnabled")} />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={boolValue("shop_nav_enabled")}
+                      onChange={(e) => patchSetting("shop_nav_enabled", e.target.checked ? "1" : "0")}
+                    />
+                  }
+                  label={t("settings.shopNavEnabled")}
+                />
                 <NoMarginHelperText>{t("settings.shopNavEnabledDes")}</NoMarginHelperText>
               </FormControl>
             </SettingForm>
@@ -131,33 +175,44 @@ const VAS = () => {
           <SettingSectionContent>
             <SettingForm title={t("settings.currencyCode")} lgWidth={5}>
               <FormControl fullWidth>
-                <DenseFilledTextField
-                  value="USD"
-                  slotProps={{
-                    input: {
-                      readOnly: true,
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Button {...bindTrigger(currencyPopupState)}>{t("settings.selectCurrency")}</Button>
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
+                <DenseSelect
+                  value={values.currency_code ?? "USD"}
+                  onChange={(e) => patchSetting("currency_code", e.target.value as string)}
+                >
+                  <SquareMenuItem value="USD" onClick={() => onSelectCurrency("USD", "$", 100)}>
+                    <ListItemText slotProps={{ primary: { variant: "body2" } }}>USD</ListItemText>
+                  </SquareMenuItem>
+                  <SquareMenuItem value="CNY" onClick={() => onSelectCurrency("CNY", "¥", 100)}>
+                    <ListItemText slotProps={{ primary: { variant: "body2" } }}>CNY</ListItemText>
+                  </SquareMenuItem>
+                  <SquareMenuItem value="EUR" onClick={() => onSelectCurrency("EUR", "€", 100)}>
+                    <ListItemText slotProps={{ primary: { variant: "body2" } }}>EUR</ListItemText>
+                  </SquareMenuItem>
+                  <SquareMenuItem value="JPY" onClick={() => onSelectCurrency("JPY", "¥", 1)}>
+                    <ListItemText slotProps={{ primary: { variant: "body2" } }}>JPY</ListItemText>
+                  </SquareMenuItem>
+                </DenseSelect>
                 <NoMarginHelperText>{t("settings.currencyCodeDes")}</NoMarginHelperText>
               </FormControl>
             </SettingForm>
 
             <SettingForm title={t("settings.currencySymbol")} lgWidth={5}>
               <FormControl fullWidth>
-                <DenseFilledTextField value={"$"} slotProps={{ input: { readOnly: true } }} />
+                <DenseFilledTextField
+                  value={values.currency_symbol ?? ""}
+                  onChange={(e) => patchSetting("currency_symbol", e.target.value)}
+                />
                 <NoMarginHelperText>{t("settings.currencySymbolDes")}</NoMarginHelperText>
               </FormControl>
             </SettingForm>
 
             <SettingForm title={t("settings.currencyUnit")} lgWidth={5}>
               <FormControl fullWidth>
-                <DenseFilledTextField type="number" value={100} slotProps={{ input: { readOnly: true } }} />
+                <DenseFilledTextField
+                  type="number"
+                  value={values.currency_unit ?? ""}
+                  onChange={(e) => patchSetting("currency_unit", e.target.value)}
+                />
                 <NoMarginHelperText>{t("settings.currencyUnitDes")}</NoMarginHelperText>
               </FormControl>
             </SettingForm>

@@ -283,6 +283,13 @@ export const router = createBrowserRouter([
               return { Component: Profile };
             },
           },
+          {
+            path: "/shop",
+            async lazy() {
+              let { Shop } = await import("../component/Pages/Pages");
+              return { Component: Shop };
+            },
+          },
         ],
       },
     ],

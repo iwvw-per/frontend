@@ -117,6 +117,7 @@
     "sharedWithMe": "与我共享",
     "myShare": "我的分享",
     "remoteDownload": "离线下载",
+    "shop": "商店",
     "connect": "连接与挂载",
     "taskQueue": "后台任务",
     "setting": "设置",
@@ -820,6 +821,24 @@
     "deleteRecord": "删除记录",
     "createdAt": "创建日期：",
     "unknownSize": "未知文件大小"
+  },
+  "shop": {
+    "title": "商店",
+    "creditBalance": "积分余额：{{credit}}",
+    "giftCodePlaceholder": "兑换码",
+    "redeem": "兑换",
+    "redeemSuccess": "兑换成功：{{product}}",
+    "redeemFailed": "兑换失败",
+    "storagePack": "存储套餐",
+    "groupPack": "会员套餐",
+    "creditPack": "积分充值",
+    "highlight": "推荐",
+    "price": "价格：{{price}}",
+    "buyWithCredits": "用 {{credits}} 积分购买",
+    "payChannelNotConfigured": "暂无可用的支付渠道",
+    "insufficientCredit": "积分不足",
+    "purchaseSuccess": "购买成功",
+    "purchaseFailed": "购买失败"
   },
   "setting": {
     "treeView": "树视图",

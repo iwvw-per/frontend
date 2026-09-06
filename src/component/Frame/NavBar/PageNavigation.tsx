@@ -10,6 +10,8 @@ import SessionManager from "../../../session";
 import { GroupBS } from "../../../session/utils.ts";
 import BoxMultiple from "../../Icons/BoxMultiple.tsx";
 import BoxMultipleFilled from "../../Icons/BoxMultipleFilled.tsx";
+import BuildingShop from "../../Icons/BuildingShop.tsx";
+import BuildingShopFilled from "../../Icons/BuildingShopFilled.tsx";
 import CloudDownload from "../../Icons/CloudDownload.tsx";
 import CloudDownloadOutlined from "../../Icons/CloudDownloadOutlined.tsx";
 import CubeSync from "../../Icons/CubeSync.tsx";
@@ -227,6 +229,7 @@ export const AdminPageNavigation = memo(() => {
 
 export const BottomPageNavigation = () => {
   const appPromotionEnabled = useAppSelector((state) => state.siteConfig.basic.config.app_promotion);
+  const shopNavEnabled = useAppSelector((state) => state.siteConfig.basic.config.shop_nav_enabled);
   const user = SessionManager.currentLoginOrNull();
   const isAdmin = useMemo(() => {
     return GroupBS(user?.user).enabled(GroupPermission.is_admin);
@@ -249,6 +252,15 @@ export const BottomPageNavigation = () => {
           {connectEnabled && <SideNavItemComponent item={ConnectNavigationItem} />}
           <SideNavItemComponent item={TaskNavigationItem} />
           {remoteDownloadEnabled && <SideNavItemComponent item={RemoteDownloadNavigationItem} />}
+          {shopNavEnabled && (
+            <SideNavItemComponent
+              item={{
+                label: "navbar.shop",
+                icon: [BuildingShopFilled, BuildingShop],
+                path: "/shop",
+              }}
+            />
+          )}
         </>
       )}
       {isLogin && isAdmin && (

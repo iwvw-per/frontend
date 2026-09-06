@@ -282,18 +282,19 @@ const SiteInformation = () => {
               <FormControl fullWidth>
                 <DenseFilledTextField
                   fullWidth
-                  slotProps={{
-                    input: {
-                      readOnly: true,
-                    },
-                  }}
+                  value={values.app_feedback_url ?? ""}
+                  onChange={(e) => setSettings({ app_feedback_url: e.target.value })}
                 />
                 <NoMarginHelperText>{t("vas.appLinkDes")}</NoMarginHelperText>
               </FormControl>
             </SettingForm>
             <SettingForm title={t("vas.appForum")} lgWidth={5}>
               <FormControl fullWidth>
-                <DenseFilledTextField fullWidth slotProps={{ input: { readOnly: true } }} />
+                <DenseFilledTextField
+                  fullWidth
+                  value={values.app_forum_url ?? ""}
+                  onChange={(e) => setSettings({ app_forum_url: e.target.value })}
+                />
                 <NoMarginHelperText>{t("vas.appLinkDes")}</NoMarginHelperText>
               </FormControl>
             </SettingForm>

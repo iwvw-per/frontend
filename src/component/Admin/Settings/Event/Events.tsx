@@ -9,7 +9,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { AuditLogType } from "../../../../api/explorer";
 import { NoMarginHelperText, SettingSection, SettingSectionContent } from "../Settings";
@@ -130,6 +130,30 @@ const Events = () => {
   const { t } = useTranslation("dashboard");
   const { formRef, setSettings, values } = useContext(SettingContext);
 
+  const subscribed = useMemo(() => {
+    try {
+      const v = JSON.parse(values.audit_event_subscriptions || "[]");
+      return Array.isArray(v) ? (v as number[]) : [];
+    } catch {
+      return [];
+    }
+  }, [values.audit_event_subscriptions]);
+
+  const patchSubscription = (eventType: number, checked: boolean) => {
+    const next = checked ? [...subscribed, eventType] : subscribed.filter((v) => v !== eventType);
+    setSettings({ audit_event_subscriptions: JSON.stringify(next) });
+  };
+
+  const categoryAllChecked = (events: number[]) => {
+    return events.length > 0 && events.every((e) => subscribed.includes(e));
+  };
+
+  const toggleCategory = (events: number[], checked: boolean) => {
+    const withoutCat = subscribed.filter((v) => !events.includes(v));
+    const next = checked ? [...withoutCat, ...events] : withoutCat;
+    setSettings({ audit_event_subscriptions: JSON.stringify(next) });
+  };
+
   return (
     <Box component={"form"} ref={formRef} onSubmit={(e) => e.preventDefault()}>
       <Stack spacing={5}>
@@ -159,7 +183,16 @@ const Events = () => {
                           variant: "body2",
                         },
                       }}
-                      control={<Checkbox size={"small"} checked={false} />}
+                      control={
+                        <Checkbox
+                          size={"small"}
+                          checked={categoryAllChecked(category.events)}
+                          indeterminate={
+                            !categoryAllChecked(category.events) && category.events.some((e) => subscribed.includes(e))
+                          }
+                          onChange={(e) => toggleCategory(category.events, e.target.checked)}
+                        />
+                      }
                       label={t("settings.toggleAll")}
                     />
                     <NoMarginHelperText>{t("settings.toggleAllDes")}</NoMarginHelperText>
@@ -174,7 +207,13 @@ const Events = () => {
                             variant: "body2",
                           },
                         }}
-                        control={<Checkbox size={"small"} checked={false} />}
+                        control={
+                          <Checkbox
+                            size={"small"}
+                            checked={subscribed.includes(eventType)}
+                            onChange={(e) => patchSubscription(eventType, e.target.checked)}
+                          />
+                        }
                         label={t(`settings.event.${getEventName(eventType)}`, getEventName(eventType))}
                       />
                     </Grid>

@@ -70,6 +70,22 @@ const UserForm = ({ reload, setLoading }: { reload: () => void; setLoading: (loa
     [setUser],
   );
 
+  const onOriginGroupChange = useCallback(
+    (value: string) => {
+      setUser((prev) => ({ ...prev, previous_group: parseInt(value) }));
+    },
+    [setUser],
+  );
+
+  const onGroupExpiredChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const raw = e.target.value;
+      const ts = raw ? new Date(raw).getTime() / 1000 : 0;
+      setUser((prev) => ({ ...prev, group_expires: Number.isFinite(ts) ? Math.round(ts) : 0 }));
+    },
+    [setUser],
+  );
+
   const onPasswordChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setUser((prev) => ({ ...prev, password: e.target.value ? e.target.value : undefined }));
@@ -253,8 +269,8 @@ const UserForm = ({ reload, setLoading }: { reload: () => void; setLoading: (loa
             </SettingForm>
             <SettingForm title={t("user.originUserGroup")} noContainer lgWidth={6}>
               <GroupSelectionInput
-                value={" "}
-                onChange={() => {}}
+                value={values.previous_group ? values.previous_group.toString() : " "}
+                onChange={onOriginGroupChange}
                 emptyText={t("user.noOriginUserGroup")}
                 emptyValue={" "}
                 fullWidth
@@ -262,7 +278,12 @@ const UserForm = ({ reload, setLoading }: { reload: () => void; setLoading: (loa
               <NoMarginHelperText>{t("user.originUserGroupDes")}</NoMarginHelperText>
             </SettingForm>
             <SettingForm title={t("user.groupExpired")} noContainer lgWidth={6}>
-              <DenseFilledTextField fullWidth value={""} />
+              <DenseFilledTextField
+                fullWidth
+                type="datetime-local"
+                value={values.group_expires ? new Date(values.group_expires * 1000).toISOString().slice(0, 16) : ""}
+                onChange={onGroupExpiredChange}
+              />
               <NoMarginHelperText>{t("user.groupExpiredDes")}</NoMarginHelperText>
             </SettingForm>
             <SettingForm title={t("user.createdAt")} noContainer lgWidth={6}>

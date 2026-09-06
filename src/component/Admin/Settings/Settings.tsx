@@ -174,6 +174,8 @@ const Settings = () => {
                     "privacy_policy_url",
                     "show_app_promotion",
                     "show_desktop_app_promotion",
+                    "app_feedback_url",
+                    "app_forum_url",
                   ]}
                 >
                   <SiteInformation />
@@ -276,7 +278,22 @@ const Settings = () => {
                 </SettingsWrapper>
               )}
               {tab === SettingsPageTab.VAS && (
-                <SettingsWrapper settings={[]}>
+                <SettingsWrapper
+                  settings={[
+                    "enable_credit",
+                    "credit_price",
+                    "share_score_rate",
+                    "ban_buffer_period",
+                    "cron_notify_user",
+                    "cron_ban_user",
+                    "anonymous_purchase",
+                    "shop_nav_enabled",
+                    "currency_code",
+                    "currency_symbol",
+                    "currency_unit",
+                    "payment",
+                  ]}
+                >
                   <VAS />
                 </SettingsWrapper>
               )}
@@ -319,7 +336,7 @@ const Settings = () => {
                 </SettingsWrapper>
               )}
               {tab === SettingsPageTab.Events && (
-                <SettingsWrapper settings={[]}>
+                <SettingsWrapper settings={["audit_event_subscriptions"]}>
                   <Events />
                 </SettingsWrapper>
               )}
