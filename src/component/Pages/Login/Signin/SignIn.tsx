@@ -127,12 +127,20 @@ const EmailLogin = ({ oauthConsent }: SignInProps) => {
 
     try {
       setLoading(true);
+
+      // 若用户未勾选任何 scope，拒绝授权
+      if (requestedScopes.length > 0 && selectedScopes.length === 0) {
+        setOauthError(t("oauth.noScopeSelected"));
+        setLoading(false);
+        return;
+      }
+
       const grantService: GrantService = {
         client_id: oauthConsent.clientId,
         response_type: oauthConsent.responseType,
         redirect_uri: oauthConsent.redirectUri,
         state: oauthConsent.state,
-        scope: oauthConsent.scope,
+        scope: selectedScopes.length > 0 ? selectedScopes.join(" ") : oauthConsent.scope,
         code_challenge: oauthConsent.codeChallenge,
         code_challenge_method: oauthConsent.codeChallengeMethod,
       };
@@ -157,7 +165,7 @@ const EmailLogin = ({ oauthConsent }: SignInProps) => {
       setOauthError(e instanceof AppError ? e.message : String(e));
       setLoading(false);
     }
-  }, [oauthConsent, dispatch, t]);
+  }, [oauthConsent, dispatch, t, selectedScopes, requestedScopes]);
 
   // Check if all requested scopes are already consented
   const checkAndProceed = useCallback(

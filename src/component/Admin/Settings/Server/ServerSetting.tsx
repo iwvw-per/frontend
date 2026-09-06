@@ -1,6 +1,10 @@
 import { Box, FormControl, Link, Stack, Typography } from "@mui/material";
+import { useSnackbar } from "notistack";
 import { useContext } from "react";
 import { Trans, useTranslation } from "react-i18next";
+import { rotateSecretKey } from "../../../../api/api.ts";
+import { useAppDispatch } from "../../../../redux/hooks.ts";
+import { DefaultCloseAction } from "../../../Common/Snackbar/snackbar.tsx";
 import { DenseFilledTextField, SecondaryButton } from "../../../Common/StyledComponents";
 import ArrowSync from "../../../Icons/ArrowSync";
 import SettingForm from "../../../Pages/Setting/SettingForm";
@@ -10,9 +14,25 @@ import { SettingContext } from "../SettingWrapper";
 const ServerSetting = () => {
   const { t } = useTranslation("dashboard");
   const { formRef, setSettings, values } = useContext(SettingContext);
+  const dispatch = useAppDispatch();
+  const { enqueueSnackbar } = useSnackbar();
 
-  const rotateSecretKey = () => {
-    setSettings({ secret_key: "[Placeholder]" });
+  const rotateSecretKeyHandler = () => {
+    dispatch(rotateSecretKey())
+      .then(() => {
+        enqueueSnackbar({
+          message: t("settings.secretKeyRotated"),
+          variant: "success",
+          action: DefaultCloseAction,
+        });
+      })
+      .catch((err: any) => {
+        enqueueSnackbar({
+          message: err?.message ?? t("settings.secretKeyRotateFailed"),
+          variant: "error",
+          action: DefaultCloseAction,
+        });
+      });
   };
 
   return (
@@ -44,7 +64,7 @@ const ServerSetting = () => {
               </FormControl>
             </SettingForm>
             <SettingForm title={t("settings.siteSecretKey")} lgWidth={5}>
-              <SecondaryButton onClick={rotateSecretKey} startIcon={<ArrowSync />} variant="contained">
+              <SecondaryButton onClick={rotateSecretKeyHandler} startIcon={<ArrowSync />} variant="contained">
                 {t("settings.rotateSecretKey")}
               </SecondaryButton>
               <NoMarginHelperText>{t("settings.siteSecretKeyDes")}</NoMarginHelperText>

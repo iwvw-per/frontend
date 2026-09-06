@@ -763,6 +763,8 @@
     "siteSecretKey": "主密钥",
     "siteSecretKeyDes": "用于加密用户令牌、签名的主密钥。轮转后，所有用户令牌、签名都将失效。保存后重启 Cloudreve 生效。",
     "rotateSecretKey": "轮转主密钥",
+    "secretKeyRotated": "主密钥已轮转，所有令牌与签名将失效",
+    "secretKeyRotateFailed": "主密钥轮转失败",
     "hashidSalt": "HashID 盐值",
     "hashidSaltDes": "用于生成 HashID 的盐值，请谨慎更改，更改后会导致现有的直链、分享链接等全部失效。",
     "accessTokenTTL": "访问令牌 TTL",

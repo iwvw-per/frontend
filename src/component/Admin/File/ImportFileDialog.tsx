@@ -67,7 +67,7 @@ export const ImportFileDialog = ({ open, onClose }: ImportFileDialogProps) => {
       sendImport({
         src: formState.externalPath,
         dst: formState.targetPath,
-        extract_media_meta: false,
+        extract_media_meta: formState.extractMediaMeta ?? false,
         user_id: formState.targetUser.id,
         recursive: formState.recursive,
         policy_id: formState.storagePolicyId ?? 0,

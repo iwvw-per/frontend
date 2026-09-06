@@ -45,10 +45,7 @@ import { copyToClipboard } from "../../../../util/index.ts";
 import TablePagination from "../../Common/TablePagination.tsx";
 import { NoMarginHelperText } from "../Settings.tsx";
 
-interface GiftCodesProps {
-  storageProductsConfig: string;
-  groupProductsConfig: string;
-}
+interface GiftCodesProps {}
 
 // Pagination params
 interface PaginationParams {
@@ -221,7 +218,7 @@ const GenerateGiftCodesDialog = ({ open, onClose, onGenerated }: GenerateGiftCod
   );
 };
 
-const GiftCodes = ({ storageProductsConfig: _sp, groupProductsConfig: _gp }: GiftCodesProps) => {
+const GiftCodes = (_: GiftCodesProps) => {
   const { t } = useTranslation("dashboard");
   const dispatch = useDispatch<ThunkDispatch<any, any, AnyAction>>();
   const { enqueueSnackbar } = useSnackbar();

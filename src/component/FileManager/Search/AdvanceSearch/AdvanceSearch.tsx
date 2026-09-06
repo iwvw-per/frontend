@@ -97,8 +97,6 @@ const searchParamToConditions = (search_params: SearchParam, base: string): Cond
     });
   }
 
-  console.log(search_params);
-
   return applied;
 };
 

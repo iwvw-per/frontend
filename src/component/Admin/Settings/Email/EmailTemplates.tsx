@@ -79,11 +79,6 @@ const EmailTemplates: React.FC = () => {
   // Template setting keys
   const templateSettings = [
     {
-      key: "mail_receipt_template",
-      title: "receiptEmailTemplate",
-      description: "receiptEmailTemplateDes",
-    },
-    {
       key: "mail_activation_template",
       title: "activationEmailTemplate",
       description: "activationEmailTemplateDes",
@@ -96,11 +91,6 @@ const EmailTemplates: React.FC = () => {
           example: "https://cloudreve.org/activate",
         },
       ],
-    },
-    {
-      key: "mail_exceed_quota_template",
-      title: "quotaExceededEmailTemplate",
-      description: "quotaExceededEmailTemplateDes",
     },
     {
       key: "mail_reset_template",

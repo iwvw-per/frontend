@@ -66,7 +66,7 @@ const extractors: ExtractorRenderProps[] = [
     des: "musicDes",
     enableFlag: "media_meta_music",
     maxSizeLocalSetting: "media_meta_music_size_local",
-    maxSizeRemoteSetting: "media_exif_music_size_remote",
+    maxSizeRemoteSetting: "media_meta_music_size_remote",
   },
   {
     name: "ffprobe",

@@ -265,7 +265,7 @@ const Settings = () => {
                     "media_meta_exif_brute_force",
                     "media_meta_music",
                     "media_meta_music_size_local",
-                    "media_exif_music_size_remote",
+                    "media_meta_music_size_remote",
                     "media_meta_ffprobe",
                     "media_meta_ffprobe_path",
                     "media_meta_ffprobe_size_local",

@@ -100,8 +100,7 @@ export default function PasskeyLoginButton({ autoComplete, onLoginSuccess, ...re
           dispatch(refreshUserSession(response, query.get("redirect")));
         }
       }
-    } catch (e) {
-      console.log(e);
+    } catch {
     } finally {
       !conditional && setLoading(false);
       dispatch(setHeadlessFrameLoading(false));

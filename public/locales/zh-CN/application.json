@@ -62,6 +62,7 @@
     "wantsToConnect": "想要连接到你的账号",
     "invalidClientId": "无效的客户端 ID",
     "appNotFound": "应用未找到",
+    "noScopeSelected": "至少需要同意一项权限",
     "reviewPermissions": "确认授权权限",
     "appRequestsAccess": "{{appName}} 正在请求访问你的账号",
     "consentDescription": "你正在授权 <0>{{appName}}</0> 访问账号 <1>{{userEmail}}</1> 下的信息：",

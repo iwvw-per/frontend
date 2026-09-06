@@ -1,6 +1,6 @@
 import { Box, FormControl, FormControlLabel, Link, ListItemText, Stack, Switch, Typography } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { isTrueVal } from "../../../../session/utils.ts";
@@ -11,7 +11,6 @@ import { SquareMenuItem } from "../../../FileManager/ContextMenu/ContextMenu.tsx
 import SettingForm from "../../../Pages/Setting/SettingForm.tsx";
 import { Code } from "../../../Common/Code.tsx";
 import GroupSelectionInput from "../../Common/GroupSelectionInput.tsx";
-import SharesInput from "../../Common/SharesInput.tsx";
 import { NoMarginHelperText, SettingSection, SettingSectionContent } from "../Settings.tsx";
 import { SettingContext } from "../SettingWrapper.tsx";
 import SSOSettings from "./SSOSettings.tsx";
@@ -47,16 +46,6 @@ const UserSession = () => {
       })
       .finally(() => setEmailFilterSaving(false));
   };
-
-  const defaultSymbolics = useMemo(() => {
-    let result: number[] = [];
-    try {
-      result = JSON.parse(values?.default_symbolics ?? "[]");
-    } catch (e) {
-      console.error(e);
-    }
-    return result;
-  }, [values?.default_symbolics]);
 
   return (
     <Box component={"form"} ref={formRef} onSubmit={(e) => e.preventDefault()}>
@@ -155,18 +144,6 @@ const UserSession = () => {
                   }
                 />
                 <NoMarginHelperText>{t("settings.defaultGroupDes")}</NoMarginHelperText>
-              </FormControl>
-            </SettingForm>
-            <SettingForm title={t("settings.defaultSymbolics")} lgWidth={5}>
-              <FormControl>
-                <SharesInput />
-                <NoMarginHelperText>
-                  <Trans
-                    i18nKey="settings.defaultSymbolicsDes"
-                    ns={"dashboard"}
-                    components={[<Link component={RouterLink} to={"/admin/share"} />]}
-                  />
-                </NoMarginHelperText>
               </FormControl>
             </SettingForm>
             <SettingForm title={t("vas.filterEmailProvider")} lgWidth={5}>

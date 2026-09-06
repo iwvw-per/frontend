@@ -199,7 +199,6 @@ const AvatarCropperDialog = ({ open, onClose, onAvatarUpdated, file }: AvatarCro
   useDebounceEffect(
     async () => {
       if (completedCrop?.width && completedCrop?.height && imageRef.current && previewCanvasRef.current) {
-        console.log(completedCrop);
         // We use canvasPreview as it's much faster than imgPreview.
         canvasPreview(imageRef.current, previewCanvasRef.current, completedCrop, 1, 0);
       }

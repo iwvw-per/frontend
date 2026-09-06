@@ -62,6 +62,7 @@
     "wantsToConnect": "wants to connect to your account",
     "invalidClientId": "Invalid client ID",
     "appNotFound": "Application not found",
+    "noScopeSelected": "At least one permission must be granted",
     "reviewPermissions": "Review Permissions",
     "appRequestsAccess": "{{appName}} is requesting access to your account",
     "consentDescription": "You are authorizing <0>{{appName}}</0> to access information under account <1>{{userEmail}}</1>:",

@@ -49,7 +49,6 @@ const Tags = () => {
 
   const [hex, setHex] = useState<string | undefined>(undefined);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
   const open = useAppSelector((state) => state.globalState.tagsDialogOpen);
@@ -78,7 +77,7 @@ const Tags = () => {
         dispatch(closeTagsDialog());
       }
     },
-    [name, dispatch, targets, tags, setLoading],
+    [dispatch, targets, tags, setLoading],
   );
 
   const presetColors = useMemo(() => {
@@ -129,13 +128,6 @@ const Tags = () => {
     },
     [hex, setTags],
   );
-
-  // const onNameChange = useCallback(
-  //   (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-  //     setName(e.target.value);
-  //   },
-  //   [dispatch, setName],
-  // );
 
   return (
     <DraggableDialog

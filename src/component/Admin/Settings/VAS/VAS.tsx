@@ -22,8 +22,6 @@ const VAS = () => {
       return {};
     }
   }, [values.payment]);
-  const storageProducts = useMemo(() => values.storage_products || "[]", [values.storage_products]);
-  const groupSellData = useMemo(() => values.group_sell_data || "[]", [values.group_sell_data]);
 
   const boolValue = (key: string): boolean => {
     const v = values[key];
@@ -261,7 +259,7 @@ const VAS = () => {
             {t("giftCodes.giftCodesSettings")}
           </Typography>
           <SettingSectionContent>
-            <GiftCodes storageProductsConfig={storageProducts} groupProductsConfig={groupSellData} />
+            <GiftCodes />
           </SettingSectionContent>
         </SettingSection>
       </Stack>

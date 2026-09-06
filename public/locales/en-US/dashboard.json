@@ -762,6 +762,8 @@
     "siteSecretKey": "Master key",
     "siteSecretKeyDes": "The master key used to encrypt user tokens and signatures. After rotation, all user tokens and signatures will be invalid. It takes effect after restarting Cloudreve.",
     "rotateSecretKey": "Rotate master key",
+    "secretKeyRotated": "Master key rotated. All tokens and signatures are now invalid.",
+    "secretKeyRotateFailed": "Failed to rotate master key",
     "hashidSalt": "HashID salt",
     "hashidSaltDes": "The salt value used to generate HashID. Please be cautious when changing it, as it will invalidate existing direct links and share links.",
     "accessTokenTTL": "Access token TTL",

@@ -1,5 +1,16 @@
 import { Description } from "@mui/icons-material";
-import { alpha, Box, Chip, List, ListItem, ListItemIcon, ListItemText, Typography, useTheme } from "@mui/material";
+import {
+  alpha,
+  Box,
+  Checkbox,
+  Chip,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import { Trans, useTranslation } from "react-i18next";
 import { AppRegistration } from "../../../../api/user.ts";
 import SessionManager from "../../../../session";
@@ -159,9 +170,22 @@ const getMergedScopes = (scopes: string[]): { scope: string; accessLevel: "reado
 
 interface ScopeListProps {
   requestedScopes: string[];
+  selectedScopes: string[];
+  onScopeToggle: (scope: string) => void;
 }
 
-const ScopeList = ({ requestedScopes }: ScopeListProps) => {
+// 计算合并展示项对应的原始 scope 集合（如 "Files.Read" readwrite 对应 Files.Read+Files.Write）
+const mergedScopeToRawScopes = (merged: { scope: string; accessLevel: "readonly" | "readwrite" | null }): string[] => {
+  if (merged.accessLevel === "readwrite") {
+    return [merged.scope, merged.scope.replace(".Read", ".Write")];
+  }
+  if (merged.scope === "profile") {
+    return profileScopes.filter((s) => s !== "UserInfo.Write");
+  }
+  return [merged.scope];
+};
+
+const ScopeList = ({ requestedScopes, selectedScopes, onScopeToggle }: ScopeListProps) => {
   const { t } = useTranslation();
   const theme = useTheme();
 
@@ -172,9 +196,24 @@ const ScopeList = ({ requestedScopes }: ScopeListProps) => {
       {mergedScopes.map(({ scope, accessLevel }) => {
         const scopeInfo = scopeDefinitions[scope];
         const Icon = scopeInfo?.icon || Description;
+        const rawScopes = mergedScopeToRawScopes({ scope, accessLevel });
+        const checked = rawScopes.every((s) => selectedScopes.includes(s));
+        const indeterminate = !checked && rawScopes.some((s) => selectedScopes.includes(s));
 
         return (
-          <ListItem key={scope} disablePadding sx={{ py: 0.5 }}>
+          <ListItem
+            key={scope}
+            disablePadding
+            sx={{ py: 0.5 }}
+            secondaryAction={
+              <Checkbox
+                size="small"
+                checked={checked}
+                indeterminate={indeterminate}
+                onChange={() => rawScopes.forEach((s) => onScopeToggle(s))}
+              />
+            }
+          >
             <ListItemIcon sx={{ minWidth: 36 }}>
               <Icon fontSize="small" color="action" />
             </ListItemIcon>
@@ -220,7 +259,7 @@ export interface PhaseConsentProps {
   control: Control;
 }
 
-const PhaseConsent = ({ app, requestedScopes, control }: PhaseConsentProps) => {
+const PhaseConsent = ({ app, requestedScopes, selectedScopes, onScopeToggle, control }: PhaseConsentProps) => {
   const { t } = useTranslation();
   const currentUser = SessionManager.currentUser();
 
@@ -239,7 +278,7 @@ const PhaseConsent = ({ app, requestedScopes, control }: PhaseConsentProps) => {
           }}
         />
       </Typography>
-      <ScopeList requestedScopes={displayScopes} />
+      <ScopeList requestedScopes={displayScopes} selectedScopes={selectedScopes} onScopeToggle={onScopeToggle} />
       {control.submit}
       {control.back}
     </Box>

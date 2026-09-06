@@ -1347,6 +1347,22 @@ export function sendSetSetting(keys: SetSettingService): ThunkResponse<{
   };
 }
 
+export function rotateSecretKey(): ThunkResponse<{ rotated: string }> {
+  return async (dispatch, _getState) => {
+    return await dispatch(
+      send(
+        `/admin/settings/rotateSecretKey`,
+        {
+          method: "POST",
+        },
+        {
+          ...defaultOpts,
+        },
+      ),
+    );
+  };
+}
+
 export function getGroupList(args: AdminListService): ThunkResponse<AdminListGroupResponse> {
   return async (dispatch, _getState) => {
     return await dispatch(

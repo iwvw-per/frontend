@@ -57,16 +57,6 @@ const supportOption: {
     order_by: "created_at",
     order_direction: "desc",
   },
-  _asc: {
-    label: "application:fileManager.sortMethods.oldestUploaded",
-    order_by: "created_at",
-    order_direction: "asc",
-  },
-  _desc: {
-    label: "application:fileManager.sortMethods.oldestUploaded",
-    order_by: "created_at",
-    order_direction: "asc",
-  },
 };
 
 const SortMethodMenu = ({ onClose, ...rest }: MenuProps) => {
