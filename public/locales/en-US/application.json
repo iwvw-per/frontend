@@ -838,7 +838,8 @@
     "payChannelNotConfigured": "No payment channel available",
     "insufficientCredit": "Insufficient credits",
     "purchaseSuccess": "Purchase successful",
-    "purchaseFailed": "Purchase failed"
+    "purchaseFailed": "Purchase failed",
+    "creditDisabled": "The credit system is not enabled yet. Enable it in the admin panel first."
   },
   "setting": {
     "treeView": "Tree view",

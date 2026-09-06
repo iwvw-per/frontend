@@ -45,6 +45,7 @@ export interface SiteConfig {
   app_promotion?: boolean;
   desktop_app_promotion?: boolean;
   shop_nav_enabled?: boolean;
+  credit_enabled?: boolean;
   thumbnail_width?: number;
   thumbnail_height?: number;
   custom_props?: CustomProps[];

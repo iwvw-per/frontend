@@ -230,6 +230,8 @@ export const AdminPageNavigation = memo(() => {
 export const BottomPageNavigation = () => {
   const appPromotionEnabled = useAppSelector((state) => state.siteConfig.basic.config.app_promotion);
   const shopNavEnabled = useAppSelector((state) => state.siteConfig.basic.config.shop_nav_enabled);
+  const creditEnabled = useAppSelector((state) => state.siteConfig.basic.config.credit_enabled);
+  const shopVisible = shopNavEnabled || creditEnabled;
   const user = SessionManager.currentLoginOrNull();
   const isAdmin = useMemo(() => {
     return GroupBS(user?.user).enabled(GroupPermission.is_admin);
@@ -252,7 +254,7 @@ export const BottomPageNavigation = () => {
           {connectEnabled && <SideNavItemComponent item={ConnectNavigationItem} />}
           <SideNavItemComponent item={TaskNavigationItem} />
           {remoteDownloadEnabled && <SideNavItemComponent item={RemoteDownloadNavigationItem} />}
-          {shopNavEnabled && (
+          {shopVisible && (
             <SideNavItemComponent
               item={{
                 label: "navbar.shop",

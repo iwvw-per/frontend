@@ -3,7 +3,7 @@ import { Box, Card, CardContent, Chip, Container, Grid2 as Grid, Paper, Stack, T
 import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAppDispatch } from "../../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { PaymentProvider, ProductType } from "../../../api/proVAS.ts";
 import { createOrder } from "../../../api/proPayment.ts";
 import { getShop, redeemGiftCode, ShopProduct } from "../../../api/proShop.ts";
@@ -29,6 +29,7 @@ const Shop = () => {
   const { t } = useTranslation("application");
   const dispatch = useAppDispatch();
   const { enqueueSnackbar } = useSnackbar();
+  const creditEnabled = useAppSelector((state) => state.siteConfig.basic.config.credit_enabled);
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [credit, setCredit] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -166,7 +167,13 @@ const Shop = () => {
           </Stack>
         </Paper>
 
-        {!loading && products.length === 0 && (
+        {!loading && !creditEnabled && (
+          <Box sx={{ p: 1, width: "100%", textAlign: "center" }}>
+            <Nothing size={0.8} top={63} primary={t("shop.creditDisabled")} />
+          </Box>
+        )}
+
+        {!loading && creditEnabled && products.length === 0 && (
           <Box sx={{ p: 1, width: "100%", textAlign: "center" }}>
             <Nothing size={0.8} top={63} primary={t("setting.listEmpty")} />
           </Box>
