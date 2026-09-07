@@ -8,8 +8,8 @@ import { DenseAutocomplete, DenseFilledTextField, SquareChip } from "../../Commo
 import LinkDismiss from "../../Icons/LinkDismiss.tsx";
 
 export interface SharesInputProps {
-  value?: number[];
-  onChange?: (value: number[]) => void;
+  value?: string[];
+  onChange?: (value: string[]) => void;
   disabled?: boolean;
 }
 
@@ -61,7 +61,9 @@ const SharesInput = ({ value, onChange, disabled }: SharesInputProps) => {
     if (!value || value.length === 0) {
       return [];
     }
-    return value.map((id) => options.find((s) => s.id === id)).filter((s): s is Share => s !== undefined);
+    return value
+      .map((idStr) => options.find((s) => s.id === parseInt(idStr)))
+      .filter((s): s is Share => s !== undefined);
   }, [value, options]);
 
   return (
@@ -79,7 +81,7 @@ const SharesInput = ({ value, onChange, disabled }: SharesInputProps) => {
         loadShares(String(val ?? ""));
       }}
       onChange={(_e, val: any) => {
-        onChange?.(val.map((s: any) => s.id));
+        onChange?.(val.map((s: any) => String(s.id)));
       }}
       renderInput={(params) => (
         <DenseFilledTextField

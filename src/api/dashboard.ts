@@ -61,7 +61,7 @@ export interface GroupSetting {
   max_walked_files?: number;
   trash_retention?: number;
   redirected_source?: boolean;
-  default_shares?: number[];
+  default_shares?: string[];
 }
 
 export interface AdminListGroupResponse {
